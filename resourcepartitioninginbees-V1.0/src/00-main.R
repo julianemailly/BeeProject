@@ -360,7 +360,14 @@ for(algorithmRC in param.useRouteCompare)
                         forbidReverseVector = forbidReverseVector,
                         differentExperienceSimulation = differentExperienceSimulation,
                         startingBoutForNaive = startingBoutForNaive,
-                        winProbabilities = rep(1/numberOfBees,times=numberOfBees));
+                        winProbabilities = rep(1/numberOfBees,times=numberOfBees),
+                        useQLearning=useQLearning,
+                        initializeQTable=initializeQTable,
+                        alphaPos=alphaPos,
+                        alphaNeg=alphaNeg,
+                        beta=betaQL,
+                        gamma=gammaQL)
+                        ;
       
       # 4.2 - Simulation --------------------------------------------------------------
       

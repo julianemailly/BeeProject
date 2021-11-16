@@ -939,3 +939,38 @@ CreateVideoOutput = function(arrayGeometry,matrixOfVisitationSequences,listOfRes
   }
 }
 
+# Extra functions for the Q-Learning algorithm:
+
+SoftMax=function(valuesVector,betaQL){
+  return(exp(betaQL*valuesVector)/sum(exp(betaQL*valuesVector)))
+}
+
+ApplyOnlineQLearning=function(QTable,state,action,reward,alphaPos,alphaNeg,gammaQL){
+  #bee with Q Table (QTable), is in state (state), does action (action), gets a reward (reward)
+  #apply Q Learning algorithm: QTable[state,action]=QTable[state,action]+alpha*(reward+gamma*max(Q(nextState,b)/b in actions)-Q[state,action])
+  #alpha: learning rate, gamma: temporal discount factor
+  #here, action also corresponds to the next state since completely deterministic environment so max(Q(nextState,b)/b in actions)=max(Q(action,b)/b in actions)
+  #two RL systems: one that reinforces positively some values (use alphaPos), one that reinforces negatively some values (use alphaNeg)
+  delta=reward+gammaQL*max(QTable[action,])-QTable[state,action];
+  if (delta>=0) {
+    QTable[state,action]=QTable[state,action]+alphaPos*delta
+  }else{
+    QTable[state,action]=QTable[state,action]+alphaNeg*delta
+  }
+  return(QTable)
+}
+
+InitializeQTableList=function(initializeQTable,arrayGeometry,distFactor,beeData){
+  if(initializeQTable=="distance"){
+    return(GetDistFctProbability(arrayGeometry,distFactor,beeData))
+  }else{
+    nStates=nrow(arrayGeometry); #TO CHECK
+    nBees=length(beeData[,1]);
+    initialMatrix = matrix(0,nrow=nStates,ncol=nStates);
+    initialMatrixList = list();
+    for (bee in (1:nBees)){
+      initialMatrixList[[bee]] = initialMatrix
+    };
+    return(initialMatrixList)
+  }
+}

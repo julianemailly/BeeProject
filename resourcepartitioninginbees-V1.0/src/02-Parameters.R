@@ -1,7 +1,7 @@
 # Parameters --------------------------------------------------------------
 
 # Array details.
-testNameGeneral = "plos_truemodel3"; # An identification name for the simulation.
+testNameGeneral = "Q_learning"; # An identification name for the simulation.
 environmentType = "plos"; # Either (i) input an array name (refer to folder names in the "Arrays" folder - Note that this folder is automatically created when you first generate an array), or (ii) input "generate" to generate procedural arrays. For the latter, provide details in 3.1.1
 
 ## 3.1.1 - Details for procedural arrays (if  using "generate" as environmentType). If not used, skip to 3.2
@@ -43,3 +43,10 @@ differentExperienceSimulation = FALSE; # If TRUE & numberOfBees = 2 : Setup the 
 startingBoutForNaive = c(1); # Bout at which each bee starts foraging. Should be < to numberOfBouts. Expects as many values as the numberOfBees if differentExperienceSimulation is TRUE.
 onlineReinforcement = TRUE; # If TRUE, probability changes after a good/bad experience is immediate and not at the end of the bout.
 
+# Parameters for the Q-learning/Rescorla-Wagner model
+useQLearning=TRUE #TRUE: if you want to use this Q learning model, FALSE: if you want to use T. Dubois' model
+initializeQTable="zero" #'zero' if yo want the Q table to be initialized as a null matrix, 'distance' if you want it to be initialized as the 1/d^distFactor matrix
+alphaPos=0.1 #positive reinforcement learning rate: 0<=alphaPos<=1
+alphaNeg=0.1 #negative reinforcement learning rate: 0<=alphaNeg<=1
+betaQL=1 #exploration-exploitation parameter: 0<=beta
+gammaQL=0 #temporal discounting factor: 0<=gamma<=1. Here, set to 0 for simplicity
