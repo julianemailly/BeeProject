@@ -1,0 +1,22 @@
+# Vector-based foraging model. 
+# © Thibaud Dubois et al., 2020 April
+
+
+Script to run simulation of our vector-based foraging model.
+To use it, you have to input the parameters in 02-Parameters.R
+Once all parameters are set, execute 00-main.R
+(you need library "plyr" installed)
+
+After execution, output files are to be found in the folder "Output" (in the directory of execution),
+in a subdirectory named after the kind of setup, and a timestamp under the form YYYYMMDDHHMMSS.
+
+Here is an overview of the outputs :
+- arrayInfos : Review of the environment parameters used.
+- arrayofMatrixDistance : For each bee during each bout, reports the absolute sum of changes in the probability matrix.
+- matrixOfVisitationSequences : Sequences of flower visits. 
+In the latter, the first three columns represent the simulation number, the bout number and the bee ident respectively.
+The next columns report the sequence of visited flowers. 
+The visited flowers are given by their ID in the corresponding arrayGeometry.csv. 
+- routeQualityDF : The quality of route used (computed as reward obtained per distance travelled). 
+See our paper for a more thorough description of this index.
+
