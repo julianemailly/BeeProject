@@ -425,7 +425,7 @@ OptimalRouteAssessment = function(array,beeData,initialProbabilityMatrix,arrayGe
       beeData = RebootBeeData(beeData);
       
       
-      currentBout = CompetitiveRoute(bout,arrayGeometry,probabilityArray,beeData[1,],optimalRouteQuality,silentSim=T);
+      currentBout = CompetitiveRoute(bout,arrayGeometry,probabilityArray,beeData[1,],optimalRouteQuality,silentSim=T,useQLearning=FALSE);
       
       ## Update variables
       probabilityArray = currentBout$Learning;
@@ -531,7 +531,7 @@ OptimalRouteAssessment2Ind = function(array,beeData,initialProbabilityMatrix,arr
       beeData = RebootBeeData(beeData);
       
       
-      currentBout = CompetitiveRoute(bout,arrayGeometry,probabilityArray,beeData,optimalRouteQuality,silentSim=T);
+      currentBout = CompetitiveRoute(bout,arrayGeometry,probabilityArray,beeData,optimalRouteQuality,silentSim=T,useQLearning=FALSE);
       
       ## Update variables
       probabilityArray = currentBout$Learning;
@@ -953,9 +953,9 @@ ApplyOnlineQLearning=function(QTable,state,action,reward,alphaPos,alphaNeg,gamma
   #two RL systems: one that reinforces positively some values (use alphaPos), one that reinforces negatively some values (use alphaNeg)
   delta=reward+gammaQL*max(QTable[action,])-QTable[state,action];
   if (delta>=0) {
-    QTable[state,action]=QTable[state,action]+alphaPos*delta
+    QTable[state,action]=QTable[state,action]+alphaPos*delta;
   }else{
-    QTable[state,action]=QTable[state,action]+alphaNeg*delta
+    QTable[state,action]=QTable[state,action]+alphaNeg*delta;
   }
   return(QTable)
 }
@@ -963,7 +963,7 @@ ApplyOnlineQLearning=function(QTable,state,action,reward,alphaPos,alphaNeg,gamma
 InitializeQTableList=function(initializeQTable,arrayGeometry,distFactor,beeData){
   if(initializeQTable=="distance"){
     return(GetDistFctProbability(arrayGeometry,distFactor,beeData))
-  }else{
+  }else if (initializeQTable=="zero"){
     nStates=nrow(arrayGeometry); #TO CHECK
     nBees=length(beeData[,1]);
     initialMatrix = matrix(0,nrow=nStates,ncol=nStates);
@@ -972,5 +972,12 @@ InitializeQTableList=function(initializeQTable,arrayGeometry,distFactor,beeData)
       initialMatrixList[[bee]] = initialMatrix
     };
     return(initialMatrixList)
+  } else if (initializeQTable=="noisydist"){
+    Q=GetDistFctProbability(arrayGeometry,distFactor,beeData);
+    n=nrow(Q[[1]]);
+    for (ind in (1:length(Q)) ){
+      Q[[ind]]=Q[[ind]]+0.5*rnorm(n*n)
+    }
+    return(Q)
   }
 }

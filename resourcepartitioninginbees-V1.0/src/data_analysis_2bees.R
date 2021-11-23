@@ -825,7 +825,7 @@ data["model"]=modelVector
 nArrayTypes=length(levels(as.factor(data$arrayType)))
 data=aggregate(data,list(data$arrayType,data$model,data$bout),mean)
 colnames(data)[2]="Model"
-ggplot(data = data,aes(x=bout, y=groupQuality,group=Model,color=Model)) +
+ggplot(data = data,aes(x=bout, y=Q,group=Model,color=Model)) +
   geom_line()+
   facet_wrap(~Group.1)+
   ylim(0,1)

@@ -49,7 +49,7 @@ simulationToAnalyse = "/Output";
 
 # Simulation specifications
 numberOfArrays = 1;
-numberOfSimulations = 500;
+numberOfSimulations = 50;
 numberOfBouts = 40;
 numberOfBees = 1;
 # numberOfResources = 10;
@@ -71,7 +71,7 @@ stopAfterTrapline = F;
 outputDirectory = paste(getwd(),simulationToAnalyse,sep="");
 testFolders = list.files(path=outputDirectory);
 # By default we retrieve files that contain the "generate" word. 
-testFolders = testFolders[CharacterMatch(testFolders,"plos")];
+testFolders = testFolders[CharacterMatch(testFolders,"generate")];
 
 
 if (length(testFolders)==0) {testFolders=c("")}
@@ -143,41 +143,41 @@ SubSequenceSimilarity=function(seq1,seq2,subSeqSize)
 {
   l1=length(seq1);
   l2=length(seq2);
-  
-  if (l1<subSeqSize | l2<subSeqSize) 
+
+  if (l1<subSeqSize | l2<subSeqSize)
   {return(0)} else {
-    
+
     listDistinctSubseq=list();
     distinctSubseqInCommon=c()
-    
+
     nSubseq1=l1-subSeqSize+1;
     nSubseq2=l2-subSeqSize+1;
-    
+
     seq=c(list(seq1),list(seq2));
     nSubseq=c(nSubseq1,nSubseq2);
-    
-    
+
+
     for (i in (1:2))
     {
       for (k in (1:nSubseq[i]))
       {
         subSeq=list(seq[[i]][k:(k+subSeqSize-1)]);
-        
+
         matchedSubseq=match(listDistinctSubseq,subSeq);
-        if (sum(matchedSubseq,na.rm=TRUE)==0) 
+        if (sum(matchedSubseq,na.rm=TRUE)==0)
         {
           listDistinctSubseq=c(listDistinctSubseq,subSeq);
           distinctSubseqInCommon=c(distinctSubseqInCommon,FALSE);
-          
-          
+
+
         }else{
           indexMatchedSubseq=which(!is.na(matchedSubseq));
           distinctSubseqInCommon[indexMatchedSubseq]=TRUE}
       }
     };
-    
+
     visitationsInCommon=list(rep(FALSE,l1),rep(FALSE,l2));
-    
+
     for (i in (1:2))
     {
       for (k in (1:nSubseq[i]))
@@ -190,9 +190,9 @@ SubSequenceSimilarity=function(seq1,seq2,subSeqSize)
         }
       }
     };
-    
-    
-    
+
+
+
     sab=sum(visitationsInCommon[[1]])+sum(visitationsInCommon[[2]]);
     return(sab/(2*max(l1,l2)))
   }
@@ -210,19 +210,19 @@ for(testNumber in 1:length(testFolders))
 {
   testFolderName = testFolders[testNumber]; # fileName
   testFolderPath = paste(outputDirectory,"/",testFolderName,sep=""); # fileDirectory
-  
+
   # Check if the file already exists
   testFiles = list.files(path = testFolderPath);
-  if(any(testFiles=="similarityData.csv") & !overwriteFiles) 
+  if(any(testFiles=="similarityData.csv") & !overwriteFiles)
   {
     cat("Similarity computation for test ",testFolderName," is already done. Proceeding to next test.\n",sep="");
     next;
   }
   cat("Starting similarity assessment for test : ",testFolderName,".\n",sep="");
-  
+
   arrays = list.files(testFolderPath);
   arrays = arrays[CharacterMatch(arrays,"Array")];
-  
+
   ## Initialize output data
   similarityDF = data.frame(arrayNumber = rep(c(1:numberOfArrays),each = numberOfSimulations*(numberOfBouts-1)*numberOfBees),
                             simulation = rep(1:numberOfSimulations, each = (numberOfBouts-1)*numberOfBees, times = numberOfArrays),
@@ -231,44 +231,44 @@ for(testNumber in 1:length(testFolders))
                             similarityIndex = 0,
                             stringsAsFactors = F);
   similarityIndexVector = numeric(numberOfArrays*numberOfSimulations*(numberOfBouts-1)*numberOfBees);
-  
+
   lineToFill = 0;
   for(arrayNumber in 1:length(arrays))
   {
     array = arrays[arrayNumber];
     arrayDirectory = paste(testFolderPath,array,sep="/");
-    
+
     visitationSequences = read.csv(paste(arrayDirectory,"/matrixOfVisitationSequences.csv",sep=""));
-    
+
     for(sim in 1:numberOfSimulations)
     {
       simVisitationSequences = subset(visitationSequences,visitationSequences[,1]==sim);
       for(bout in 1:(numberOfBouts-1))
       {
         boutVisitationSequences = simVisitationSequences[which(simVisitationSequences[,2]==bout | simVisitationSequences[,2]==bout+1),];
-        
+
         for(bee in 1:numberOfBees)
         {
           indVisitationSequences = subset(boutVisitationSequences,boutVisitationSequences[,3]==bee)[,-c(1:3)];
-          
+
           lineToFill = lineToFill + 1;
-          
+
           seq1 = indVisitationSequences[1,-1];
           seq1 = as.numeric(seq1)[which(seq1!=0 & seq1!=1)];
-          
+
           seq2 = indVisitationSequences[2,-1];
           seq2 = as.numeric(seq2)[which(seq2!=0 & seq2!=1)];
-          
+
           similarityIndexVector[lineToFill] = SubSequenceSimilarity(seq1,seq2,subSeqSize)
         }
       }
     }
   }
-  
+
   ## Compile all data in the data.frame
   similarityDF$similarityIndex = similarityIndexVector;
-  
-  
+
+
   write.csv(similarityDF,paste(testFolderPath,"/similarityData.csv",sep=""),row.names = F);
 }
 
@@ -280,30 +280,30 @@ outputDataSim = data.frame();
 for(testNumber in 1:length(testFolders))
 {
   folderName = testFolders[testNumber];
-  
+
   fileDirectory = paste(outputDirectory,"/",folderName,sep="");
-  
+
   ## Import SubSeqSim
   subSeqSim = read.csv(paste(fileDirectory,"/similarityData.csv",sep=""));
-  
+
   beeInfos = read.csv(paste(fileDirectory,"/Array01/beeInfos.csv",sep=""))
   arrayInfos = read.csv(paste(fileDirectory,"/Array01/arrayInfos.csv",sep=""))
   arrayType = paste("R",arrayInfos$numberOfResources,"-P",arrayInfos$numberOfPatches,sep="")
-  
+
   extractSimilarity = subSeqSim$similarityIndex
   dataLength = length(extractSimilarity);
   similarityVector[c(lineSimilarity:(lineSimilarity+dataLength-1))] = extractSimilarity;
   lineSimilarity = lineSimilarity + dataLength;
-  
+
   if(beeInfos$routeCompare[1]) algorithmChr = "routeCompare" else algorithmChr = "noRouteCompare"
-  
+
   reorgData = data.frame(arrayType = arrayType,
                          algorithm = algorithmChr,
                          learningValue = beeInfos$learningFactor[1],
                          abandonValue = beeInfos$abandonFactor[1],
                          subSeqSim)
-  
-  
+
+
   outputDataSim = rbind(outputDataSim,reorgData);
 }
 
@@ -324,10 +324,12 @@ relativeQualityVector = numeric(numberOfTests*numberOfArrays*numberOfSimulations
 lineRouteQuality = 1;
 
 for(testNumber in 1:length(testFolders))
+  print(testNumber);
 {
   folderName = testFolders[testNumber];
   
   fileDirectory = paste(outputDirectory,"/",folderName,sep="");
+  print(fileDirectory);
   
   ## Import route Quality
   routeQuality = read.csv(paste(fileDirectory,"/Array01/routeQualityDF.csv",sep=""));
@@ -359,7 +361,6 @@ modelVector[data$learningValue==1.5 & data$abandonValue==0.75]="model 3"
 data["model"]=modelVector
 nArrayTypes=length(levels(as.factor(data$arrayType)))
 data=aggregate(data,list(data$model,data$bout),mean)
-colnames(data)[2]="Model"
 ggplot(data = data,aes(x=bout, y=relativeQuality)) +
   geom_line()+
   facet_wrap(~Group.1)+
