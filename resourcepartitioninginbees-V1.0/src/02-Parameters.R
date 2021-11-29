@@ -1,21 +1,21 @@
 # Parameters --------------------------------------------------------------
 
 # Array details.
-testNameGeneral = "Q_learning"; # An identification name for the simulation.
+testNameGeneral = "QLearning"; # An identification name for the simulation.
 environmentType = "generate"; # Either (i) input an array name (refer to folder names in the "Arrays" folder - Note that this folder is automatically created when you first generate an array), or (ii) input "generate" to generate procedural arrays. For the latter, provide details in 3.1.1
 
 ## 3.1.1 - Details for procedural arrays (if  using "generate" as environmentType). If not used, skip to 3.2
 numberOfResources = 5; # Number of flowers (all patches combined)
 numberOfPatches = 1; # Number of patches in which the flowers are distributed
-patchinessIndex = 1; # Patchiness of the array. Takes values between 0 (homogeneous) and 1 (very heterogeneous).
+patchinessIndex = 0; # Patchiness of the array. Takes values between 0 (homogeneous) and 1 (very heterogeneous).
 envSize = 500; # Size of the environment in meters. 
 flowerPerPatch = NULL; # Number of flowers per patch. If only one patch, set to NULL. Takes one value per patch, sum need to be equal to numberOfResources.
-numberOfArrays = 1; # Number of different arrays created using the values above. Only used if environmentType == "generate".
+numberOfArrays = 10; # Number of different arrays created using the values above. Only used if environmentType == "generate".
 reuseGeneratedArrays = TRUE; # If TRUE and there already are generated arrays with the same parameters, they will be used instead of generating new ones.
 
 # Simulation parameters
 numberOfBees = 1; # Number of bees moving simultaneously in the environment.
-numberOfSimulations = 50; # Number of simulations for each set of parameter.
+numberOfSimulations = 100; # Number of simulations for each set of parameter.
 numberOfBouts = 40; # Number of bouts in each simulation.
 distFactor = 2; # This variable contains the power at which the distance is taken in the [probability = 1/d^distFactor] function to estimate movement probabilities.
 
@@ -46,16 +46,16 @@ onlineReinforcement = TRUE; # If TRUE, probability changes after a good/bad expe
 # Parameters for the Q-learning/Rescorla-Wagner model
 useQLearning=TRUE; #TRUE: if you want to use this Q learning model, FALSE: if you want to use T. Dubois' model
 initializeQTable="zero"; #'zero' if yo want the Q table to be initialized as a null matrix, 'distance' if you want it to be initialized as the 1/d^distFactor matrix, 'noisydist if you want to add noise to the distance ditribution
-alphaPos=0.2; #positive reinforcement learning rate: 0<=alphaPos<=1
-alphaNeg=0.2; #negative reinforcement learning rate: 0<=alphaNeg<=1
-betaQL=7; #exploration-exploitation parameter: 0<=beta
-gammaQL=0.; #temporal discounting factor: 0<=gamma<=1. Here, set to 0 for simplicity
+alphaPosList=list(0.2); #positive reinforcement learning rate: 0<=alphaPos<=1
+alphaNegList=list(0.); #negative reinforcement learning rate: 0<=alphaNeg<=1
+betaList=list(7); #exploration-exploitation parameter: 0<=beta
+gammaList=list(0); #temporal discounting factor: 0<=gamma<=1. Here, set to 0 for simplicity
 if (useQLearning) {onlineReinforcement=TRUE};
 
 
 dynamicBeta=FALSE;
 if (dynamicBeta) {
-  startingBeta=0;
+  startingBeta=1;
   finalBeta=10;
   boutsToIncreaseBeta=20;
   betaQLVector=rep(finalBeta,numberOfBouts);

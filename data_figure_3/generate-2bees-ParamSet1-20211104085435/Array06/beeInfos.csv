@@ -1,3 +1,0 @@
-"ID","maxDistance","maxCrop","learningFactor","abandonFactor","maxFails","routeCompare","leaveAfterMaxFail","allowNestReturn","forbidReverseVector","differentExperienceSimulation","startingBoutForNaive","winProbabilities","arrayID"
-1,3000,5,1.5,0.75,2,FALSE,FALSE,TRUE,TRUE,FALSE,1,0.5,"Array-10-2-1-55-500_06"
-2,3000,5,1.5,0.75,2,FALSE,FALSE,TRUE,TRUE,FALSE,1,0.5,"Array-10-2-1-55-500_06"

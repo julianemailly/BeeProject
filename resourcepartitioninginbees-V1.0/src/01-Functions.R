@@ -976,7 +976,7 @@ InitializeQTableList=function(initializeQTable,arrayGeometry,distFactor,beeData)
     Q=GetDistFctProbability(arrayGeometry,distFactor,beeData);
     n=nrow(Q[[1]]);
     for (ind in (1:length(Q)) ){
-      Q[[ind]]=Q[[ind]]+0.5*rnorm(n*n)
+      Q[[ind]]=Q[[ind]]+0.1*rnorm(n*n)
     }
     return(Q)
   }
