@@ -169,7 +169,8 @@ CompetitiveRoute = function(bout,arrayGeometry,learningArray,beeData,optimalRout
               learningArray[[indLost]] = NormalizeMatrix(learningArray[[indLost]])
             }else{
               reward=0;
-              if (costOfFlying){reward=reward-(distanceMatrix[beeRoute[indLost,visitNumber-1]][flower])/max(distanceMatrix)};
+              #if (costOfFlying){reward=reward-(distanceMatrix[beeRoute[indLost,visitNumber-1]][flower])/max(distanceMatrix)};
+              if (costOfFlying){reward=reward/(distanceMatrix[beeRoute[indLost,visitNumber-1]][flower])};
               learningArray[[indLost]]=ApplyOnlineQLearning(learningArray[[indLost]],(beeRoute[indLost,visitNumber-1]),flower,reward,alphaPos,alphaNeg,gammaQL); #TBD reward
             }
             
@@ -231,7 +232,8 @@ CompetitiveRoute = function(bout,arrayGeometry,learningArray,beeData,optimalRout
                   learningArray[[ind]] = NormalizeMatrix(learningArray[[ind]])
                 }else{
                   reward=1;
-                  if (costOfFlying){reward=reward-(distanceMatrix[beeRoute[ind,visitNumber-1]][flowerVisited])/max(distanceMatrix)};
+                  #if (costOfFlying){reward=reward-(distanceMatrix[beeRoute[ind,visitNumber-1]][flowerVisited])/max(distanceMatrix)};
+                  if (costOfFlying){reward=reward/(distanceMatrix[beeRoute[ind,visitNumber-1]][flowerVisited])};
                   learningArray[[ind]]=ApplyOnlineQLearning(learningArray[[ind]],beeRoute[ind,visitNumber-1],flowerVisited,1,alphaPos,alphaNeg,gammaQL);#reward TBD
                 }
               }
@@ -246,7 +248,8 @@ CompetitiveRoute = function(bout,arrayGeometry,learningArray,beeData,optimalRout
                 learningArray[[ind]] = NormalizeMatrix(learningArray[[ind]])
               }else{
                 reward=0;
-                if (costOfFlying){reward=reward-(distanceMatrix[beeRoute[ind,visitNumber-1]][flowerVisited])/max(distanceMatrix)};
+                #if (costOfFlying){reward=reward-(distanceMatrix[beeRoute[ind,visitNumber-1]][flowerVisited])/max(distanceMatrix)};
+                if (costOfFlying){reward=reward/(distanceMatrix[beeRoute[ind,visitNumber-1]][flowerVisited])};
                 learningArray[[ind]]=ApplyOnlineQLearning(learningArray[[ind]],beeRoute[ind,visitNumber-1],flowerVisited,0,alphaPos,alphaNeg,gammaQL);#reward TBD
               }
             }

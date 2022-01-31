@@ -1,8 +1,8 @@
 # Parameters --------------------------------------------------------------
 
 # Array details.
-testNameGeneral = "QLearning"; # An identification name for the simulation.
-environmentType = "generate"; # Either (i) input an array name (refer to folder names in the "Arrays" folder - Note that this folder is automatically created when you first generate an array), or (ii) input "generate" to generate procedural arrays. For the latter, provide details in 3.1.1
+testNameGeneral = "Dubois"; # An identification name for the simulation.
+environmentType = "plos"; # Either (i) input an array name (refer to folder names in the "Arrays" folder - Note that this folder is automatically created when you first generate an array), or (ii) input "generate" to generate procedural arrays. For the latter, provide details in 3.1.1
 
 ## 3.1.1 - Details for procedural arrays (if  using "generate" as environmentType). If not used, skip to 3.2
 numberOfResources = 5; # Number of flowers (all patches combined)
@@ -10,12 +10,12 @@ numberOfPatches = 1; # Number of patches in which the flowers are distributed
 patchinessIndex = 0; # Patchiness of the array. Takes values between 0 (homogeneous) and 1 (very heterogeneous).
 envSize = 500; # Size of the environment in meters. 
 flowerPerPatch = NULL; # Number of flowers per patch. If only one patch, set to NULL. Takes one value per patch, sum need to be equal to numberOfResources.
-numberOfArrays = 10; # Number of different arrays created using the values above. Only used if environmentType == "generate".
+numberOfArrays = 1; # Number of different arrays created using the values above. Only used if environmentType == "generate".
 reuseGeneratedArrays = TRUE; # If TRUE and there already are generated arrays with the same parameters, they will be used instead of generating new ones.
 
 # Simulation parameters
 numberOfBees = 1; # Number of bees moving simultaneously in the environment.
-numberOfSimulations = 100; # Number of simulations for each set of parameter.
+numberOfSimulations = 500; # Number of simulations for each set of parameter.
 numberOfBouts = 40; # Number of bouts in each simulation.
 distFactor = 2; # This variable contains the power at which the distance is taken in the [probability = 1/d^distFactor] function to estimate movement probabilities.
 
@@ -23,7 +23,7 @@ distFactor = 2; # This variable contains the power at which the distance is take
 # Each item of the list objects will replicate the simulations for its values. The model will run for all combinations of parameters. May quickly increase computation time.
 param.useRouteCompare = list(FALSE); # TRUE : Use the route-based learning algorithm (Reynolds et al., 2013). FALSE : Use our vector-based algorithm.
 # /!\ Warning : The route-based algorithm is not identical to that of Reynolds et al., 2013. Mainly, it uses the route with revisits when assessing route quality.
-param.learningFactor = list(1.5); # Strength of the learning process. Translates as a multiplication of any vector probability P by this factor (Should be 1 <= learningFactor)
+param.learningFactor = list(1.); # Strength of the learning process. Translates as a multiplication of any vector probability P by this factor (Should be 1 <= learningFactor)
 param.abandonFactor = list(0.75); # Strength of the abandon process. Translates as a multiplication of any vector probability P by this factor (Should be 0 <= abandonFactor <= 1)
 maximumBoutDistance = 3000; # Maximum distance the bee can travel before being exhausted. After reaching this threshold, the bee goes back to its nest no matter what.
 
@@ -44,11 +44,11 @@ startingBoutForNaive = c(1); # Bout at which each bee starts foraging. Should be
 onlineReinforcement = TRUE; # If TRUE, probability changes after a good/bad experience is immediate and not at the end of the bout.
 
 # Parameters for the Q-learning/Rescorla-Wagner model
-useQLearning=TRUE; #TRUE: if you want to use this Q learning model, FALSE: if you want to use T. Dubois' model
+useQLearning=FALSE; #TRUE: if you want to use this Q learning model, FALSE: if you want to use T. Dubois' model
 initializeQTable="zero"; #'zero' if yo want the Q table to be initialized as a null matrix, 'distance' if you want it to be initialized as the 1/d^distFactor matrix, 'noisydist if you want to add noise to the distance ditribution
-alphaPosList=list(0.2); #positive reinforcement learning rate: 0<=alphaPos<=1
-alphaNegList=list(0.); #negative reinforcement learning rate: 0<=alphaNeg<=1
-betaList=list(7); #exploration-exploitation parameter: 0<=beta
+alphaPosList=list(0.4); #positive reinforcement learning rate: 0<=alphaPos<=1
+alphaNegList=list(0.4); #negative reinforcement learning rate: 0<=alphaNeg<=1
+betaList=list(15); #exploration-exploitation parameter: 0<=beta
 gammaList=list(0); #temporal discounting factor: 0<=gamma<=1. Here, set to 0 for simplicity
 if (useQLearning) {onlineReinforcement=TRUE};
 
@@ -62,4 +62,4 @@ if (dynamicBeta) {
   for (bout in 1:boutsToIncreaseBeta) {betaQLVector[bout]=startingBeta+(bout-1)*(finalBeta-startingBeta+1)/boutsToIncreaseBeta}
 };
 
-costOfFlying= TRUE
+costOfFlying= FALSE

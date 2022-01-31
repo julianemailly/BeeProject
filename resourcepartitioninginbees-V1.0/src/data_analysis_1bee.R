@@ -48,8 +48,8 @@ source("01-Functions.R")
 simulationToAnalyse = "/Output";
 
 # Simulation specifications
-numberOfArrays = 10;
-numberOfSimulations = 100;
+numberOfArrays = 1;
+numberOfSimulations = 500;
 numberOfBouts = 40;
 numberOfBees = 1;
 # numberOfResources = 10;
@@ -71,7 +71,7 @@ stopAfterTrapline = F;
 outputDirectory = paste(getwd(),simulationToAnalyse,sep="");
 testFolders = list.files(path=outputDirectory);
 # By default we retrieve files that contain the "generate" word. 
-testFolders = testFolders[CharacterMatch(testFolders,"generate")];
+testFolders = testFolders[CharacterMatch(testFolders,"plos")];
 
 
 if (length(testFolders)==0) {testFolders=c("")}
@@ -396,11 +396,14 @@ modelVector[data$QLearning & data$alphaPos==0 & data$alphaNeg>0]="QLearning 2"
 modelVector[data$QLearning & data$alphaPos>0 & data$alphaNeg>0]="QLearning 3"
 data["model"]=modelVector
 nArrayTypes=length(levels(as.factor(data$arrayType)))
-data=aggregate(data,list(data$model,data$alphaPos, data$alphaNeg,data$betaQL,data$bout),mean)
+data_mean=aggregate(data,list(data$model,data$bout),mean)
+data_sd= aggregate(data,list(data$model,data$bout),sd)
+data=data_mean
+data["sd"]=data_sd["relativeQuality"]
 ggplot(data = data,aes(x=bout, y=relativeQuality)) +
   geom_line()+
   facet_wrap(~Group.1)+
-  ylim(0,1)
+  geom_errorbar(aes(ymin=relativeQuality-sd, ymax=relativeQuality+sd), width=.2, position=position_dodge(0.05))
 
 
 
@@ -415,10 +418,12 @@ modelVector[data$QLearning & data$alphaPos==0 & data$alphaNeg>0]="QLearning 2"
 modelVector[data$QLearning & data$alphaPos>0 & data$alphaNeg>0]="QLearning 3"
 data["model"]=modelVector
 nArrayTypes=length(levels(as.factor(data$arrayType)))
-data=aggregate(data,list(data$model,data$alphaPos, data$alphaNeg,data$bout),mean)
-colnames(data)[2]="Model"
+data_mean=aggregate(data,list(data$model,data$bout),mean)
+data_sd= aggregate(data,list(data$model,data$bout),sd)
+data=data_mean
+data["sd"]=data_sd["similarityIndex"]
 ggplot(data = data,aes(x=bout, y=similarityIndex)) +
   geom_line()+
   facet_wrap(~Group.1)+
-  ylim(0,1)
+  geom_errorbar(aes(ymin=similarityIndex-sd, ymax=similarityIndex+sd), width=.2, position=position_dodge(0.05))
 
