@@ -17,6 +17,6 @@ A more thorough description of my project can be found in my **[preregistration]
 ## Contact
 
 Juliane Mailly 
-M2 Cogmaster (ENS-Universite de Paris-EHESS), Paris
+M2 Cogmaster (ENS-Universite de Paris-EHESS), Paris  
 Intern at the CRCA  
 Email: julianemailly@gmail.com

@@ -12,8 +12,8 @@ Link: (https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8351995/)
 
 ## Contact
 
-Primary author of the code: Thibault Dubois 
+Primary author of the code: Thibault Dubois   
 Contact: thibault.dubois@univ-tlse3.fr
 
-Corrections of the code: Juliane Mailly
+Corrections of the code: Juliane Mailly  
 Contact: julianemailly@gmail.com
