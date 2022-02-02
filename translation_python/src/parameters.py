@@ -14,7 +14,7 @@ number_of_resources = 5 # Number of flowers (all patches combined)
 number_of_patches = 1 # Number of patches in which the flowers are distributed
 patchiness_index = 0 # Patchiness of the array. Takes values between 0 (homogeneous) and 1 (very heterogeneous).
 env_size = 500 # Size of the environment in meters. 
-flower_per_patch = None # Number of flowers per patch. If only one patch, set to None. Takes one value per patch, sum need to be equal to numberOfResources.
+flowers_per_patch = None # Number of flowers per patch. If only one patch, set to None. Takes one value per patch, sum need to be equal to numberOfResources.
 number_of_arrays = 1 # Number of different arrays created using the values above. Only used if environmentType == "generate".
 reuse_generated_arrays =  True # If  True and there already are generated arrays with the same parameters, they will be used instead of generating new ones.
 
@@ -39,8 +39,7 @@ simulations_to_print = 1 # Select the number of videos to print. Must not be abo
 silent_sim = False  # If False, provides comments in the Console on the progression of the simulation.
 
 # Advanced parameters
-min_prob_visit = 0.0001  # (Deprecated as the learning is now multiplicative) Keep a minimal probability of vector use if its probability gets negative.
-leave_after_max_fail = False  # If a vector use leads to no reward twice in a bout, forbid its use until the end of the bout.
+leave_after_max_fail = False  # If a vector use leads to no reward number_of_max_fails times in a bout, forbid its use until the end of the bout.
 number_of_max_fails = 2  # If leaveAfterMaxFail is  True, set the number of fails needed for the bee to ignore a vector.
 allow_nest_return =  True  # If  True, probabilities to go to the nest from any position are not set to 0. If the nest is reached, the bout ends.
 forbid_reverse_vector =  True  # If  True, foragers ignore reverse vectors. Example : if it just did 2->3, the prob of doing 3->2 is 0 until its next movement.

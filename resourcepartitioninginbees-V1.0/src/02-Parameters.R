@@ -10,21 +10,21 @@ numberOfPatches = 1; # Number of patches in which the flowers are distributed
 patchinessIndex = 0; # Patchiness of the array. Takes values between 0 (homogeneous) and 1 (very heterogeneous).
 envSize = 500; # Size of the environment in meters. 
 flowerPerPatch = NULL; # Number of flowers per patch. If only one patch, set to NULL. Takes one value per patch, sum need to be equal to numberOfResources.
-numberOfArrays = 1; # Number of different arrays created using the values above. Only used if environmentType == "generate".
+numberOfArrays = 10; # Number of different arrays created using the values above. Only used if environmentType == "generate".
 reuseGeneratedArrays = TRUE; # If TRUE and there already are generated arrays with the same parameters, they will be used instead of generating new ones.
 
 # Simulation parameters
 numberOfBees = 1; # Number of bees moving simultaneously in the environment.
-numberOfSimulations = 500; # Number of simulations for each set of parameter.
-numberOfBouts = 40; # Number of bouts in each simulation.
+numberOfSimulations = 10; # Number of simulations for each set of parameter.
+numberOfBouts = 20; # Number of bouts in each simulation.
 distFactor = 2; # This variable contains the power at which the distance is taken in the [probability = 1/d^distFactor] function to estimate movement probabilities.
 
 # Forager parameters. 
 # Each item of the list objects will replicate the simulations for its values. The model will run for all combinations of parameters. May quickly increase computation time.
 param.useRouteCompare = list(FALSE); # TRUE : Use the route-based learning algorithm (Reynolds et al., 2013). FALSE : Use our vector-based algorithm.
 # /!\ Warning : The route-based algorithm is not identical to that of Reynolds et al., 2013. Mainly, it uses the route with revisits when assessing route quality.
-param.learningFactor = list(1.); # Strength of the learning process. Translates as a multiplication of any vector probability P by this factor (Should be 1 <= learningFactor)
-param.abandonFactor = list(0.75); # Strength of the abandon process. Translates as a multiplication of any vector probability P by this factor (Should be 0 <= abandonFactor <= 1)
+param.learningFactor = list(1.5); # Strength of the learning process. Translates as a multiplication of any vector probability P by this factor (Should be 1 <= learningFactor)
+param.abandonFactor = list(1.); # Strength of the abandon process. Translates as a multiplication of any vector probability P by this factor (Should be 0 <= abandonFactor <= 1)
 maximumBoutDistance = 3000; # Maximum distance the bee can travel before being exhausted. After reaching this threshold, the bee goes back to its nest no matter what.
 
 # Output management & technical parameters.
