@@ -60,7 +60,7 @@ def optimal_route_assessment(array,array_geometry,bee_data,initial_probability_m
       probability_array = current_bout["learning"]
       bee_data = current_bout["bee_data"]
       optimal_route_quality = current_bout["optimal_route_quality"]
-      matrix_of_bee_data[i,3] = bee_data["number_of_resources"][0]
+      matrix_of_bee_data[i,3] = bee_data["number_of_resources_foraged"][0]
       matrix_of_bee_data[i,4] = current_bout["quality"][0]
 
       list_of_visitation_sequences[sim*number_of_bouts+bout] = current_bout["sequences"]
@@ -139,7 +139,7 @@ def optimal_route_assessment_2_ind(array,array_geometry,bee_data,initial_probabi
       probability_array = current_bout["learning"]
       bee_data = current_bout["bee_data"]
       optimal_route_quality = current_bout["optimal_route_quality"]
-      matrix_of_bee_data[i,3] = bee_data["number_of_resources"][0]
+      matrix_of_bee_data[i,3] = bee_data["number_of_resources_foraged"][0]
       matrix_of_bee_data[i,4] = current_bout["quality"][0] + current_bout["quality"][1] # there are gonna be duplications of the same number but doesn't matter
 
       list_of_visitation_sequences[sim*number_of_bouts+bout] = current_bout["sequences"]
@@ -249,7 +249,7 @@ array = "test_name_array"
 array_number = 1
 array_info = {'environment_type':'generate', 'number_of_resources' : 5, 'number_of_patches' : 1, 'patchiness_index' : 0, 'env_size' : 500, 'flowers_per_patch' : None }
 array_geometry, array_info_new, array_folder = spatial_array_generation_and_manipulation_functions.create_environment (array_info, array_number)
-print('array geormetry ',array_geometry)
+print('array geometry ',array_geometry)
 bee_data = 
 dist_factor = 2 
 number_of_bees = 1

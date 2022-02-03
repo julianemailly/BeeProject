@@ -45,7 +45,7 @@ def apply_learning (route, probability_matrix,flower_outcome_matrix,bee_data,rou
       factor_matrix = np.ones((nrow,ncol))
 
       # Check if new route is better or equal
-      if (route_quality >= bee_data["best_route_quality"][0]) and (bee_data["number_of_foraged_resources"].equals(bee_data["crop_capacity"])) and (bee_data["best_route_quality"][0]>0) : ## /!\ Assuming crop capacity of 5.
+      if (route_quality >= bee_data["best_route_quality"][0]) and (bee_data["number_of_resources_foraged"].equals(bee_data["crop_capacity"])) and (bee_data["best_route_quality"][0]>0) : ## /!\ Assuming crop capacity of 5.
 
         # Add all vectors of the route as a positive outcome
         number_of_flowers_in_route = len(route)
@@ -103,6 +103,60 @@ def apply_online_Q_learning(Q_table,state,action,reward,alpha_pos,alpha_neg,gamm
   else : 
     Q_table[state,action] = Q_table[state,action] + alpha_neg*delta
   return(Q_table)
+
+
+def apply_online_learning(probability_matrix,state,action,reward,learning_factor,abandon_factor) : 
+  """
+  Description: 
+    Applies online learning by T. Dubois: probability_matrix[state,action] = probability_matrix[state,action]*factor where factor=learning_factor when reward>0 and factor=abandon_factor otherwise
+  Inputs:
+    probability_matrx: probability of going from one flower to another
+    state: previous flower
+    action: current flower
+    reward: 1 if positive outcome, -1 if negative outcome
+    learning_factor: >=1 will increase the probabilty of doing an action
+    abandon_factor: <=1 will decrease the porbability of doing an action
+  Outputs: 
+    Updated probability matrix
+  """ 
+  if reward >=0 : 
+    factor = learning_factor
+  else :
+    factor = abandon_factor
+  probability_matrix[state,action] = probability_matrix[state,action]*factor
+  probability_matrix = geometry_functions.normalize_matrix_by_row(probability_matrix)
+  return(probability_matrix)
+
+
+def online_learning(cost_of_flying,array_geometry,use_Q_learning,learning_array,state,action,reward,alpha_pos,alpha_neg,gamma_QL,learning_factor,abandon_factor) : 
+  """
+  Description: 
+    Arbitration between the two apply_online_(Q)learning fuctions
+  Inputs:
+    learning_array: either probability matrix or Q_table
+    state: previous flower
+    action: current flower
+    reward: CAREFUL The reward is specified for Q learning 
+    learning_factor: >=1 will increase the probabilty of doing an action
+    abandon_factor: <=1 will decrease the porbability of doing an action
+    alpha_pos(neg): learnig rate for positive(negative) outcomes 
+    gamma_QL: temportal discounting factor
+  Outputs: 
+    Updated learning array  
+  """
+  matrix_of_pairwise_distances = geometry_functions.get_matrix_of_distances_between_flowers(array_geometry)
+  max_distance_between_flowers = np.max(matrix_of_pairwise_distances)
+
+  if use_Q_learning :
+    if cost_of_flying : 
+      reward  = reward - matrix_of_pairwise_distances[state,action]/max_distance_between_flowers
+    learning_array = apply_online_learning(probability_matrix,state,action,reward,learning_factor,abandon_factor)
+  else : 
+    if reward == 0 :
+      reward = -1
+    learning_array = apply_online_learning(probability_matrix,state,action,reward,learning_factor,abandon_factor)
+
+  return(learning_array)
 
 
 def initialize_Q_table_list (initialize_Q_table, array_geometry, dist_factor, number_of_bees) : 

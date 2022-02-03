@@ -56,7 +56,7 @@ def reboot_bee_data(bee_data) :
     The updated bee_data dataframe
   """
   number_of_bees = len(bee_data["ID"])
-  bee_data["number_of_foraged_resources"] = [0 for bee in range (number_of_bees)]
+  bee_data["number_of_resources_foraged"] = [0 for bee in range (number_of_bees)]
   bee_data["bout_finished"] = [False for bee in range (number_of_bees)]
-  bee_data["distance_travelled"] = [0 for bee in range (number_of_bees)]
+  bee_data["distance_travelled"] = [0. for bee in range (number_of_bees)]
   return(bee_data)

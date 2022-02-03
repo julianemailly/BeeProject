@@ -147,3 +147,22 @@ def get_route_quality(route,array_geometry,list_of_resources_foraged) :
 		number_of_foraged_resources = np.sum(list_of_resources_foraged)
 		route_quality = compute_route_quality(number_of_foraged_resources,route_length)
 		return(route_quality)
+
+
+def formating_route(route):
+	"""
+	Description: 
+		Takes a route such as [0,n1,n2,...,np,0,...,0] and remove the unecessary 0 to make [0,n1,n2,...,np,0]
+	Inputs:
+		route: [0,n1,n2,...,np,0,...,0]
+	Outputs:
+		route: [0,n1,n2,...,np,0]
+	"""
+	route=np.array(route)
+	route_length = len(route)
+	i = route_length - 1
+	while i!=0 and route[i] == 0:
+		route = np.delete(route,i)
+		i=i-1
+	route = np.concatenate((route,[0]))
+	return(route)
