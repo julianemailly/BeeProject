@@ -20,6 +20,11 @@ def initialize_bee_data(number_of_bees,param_tracking,param_indiv) :
   Outputs:
     bee_data: pandas dataframe containing information about bees that will be changed throughout the simulation. nrows = number_of_bees, ncol = number of attributes of param_trancking+number of attributes of param_indiv+2
   """
+  for key in param_indiv : 
+    param_indiv[key] = [param_indiv[key] for k in range (number_of_bees)] 
+  for key in param_tracking : 
+    if not (key == "starting_bout_for_naive" and param_tracking["different_experience_simulation"]) :
+      param_tracking[key] = [param_tracking[key] for k in range (number_of_bees)]  
   dict_of_bee_data = {"ID": [bee for bee in range (number_of_bees)]}
   dict_of_bee_data.update(param_tracking)
   dict_of_bee_data.update(param_indiv)
@@ -38,6 +43,9 @@ def build_bee_info(number_of_bees,param_indiv,array_ID) :
   Outputs:
     bee_info: pandas dataframe with information about bees that will be stored at the end. nrows = number_of_bees, ncol = number of attributes of param_indiv+2
   """
+  for key in param_indiv : 
+    if not (key == "starting_bout_for_naive" and aram_tracking["different_experience_simulation"]) :
+      param_tracking[key] = [param_tracking[key] for k in range (number_of_bees)]  
   dict_of_bee_info = {"ID": [bee for bee in range (number_of_bees)]}
   dict_of_bee_info.update(param_indiv)
   dict_of_bee_info.update({'array_ID':array_ID})
@@ -56,7 +64,8 @@ def reboot_bee_data(bee_data) :
     The updated bee_data dataframe
   """
   number_of_bees = len(bee_data["ID"])
-  bee_data["number_of_resources_foraged"] = [0 for bee in range (number_of_bees)]
-  bee_data["bout_finished"] = [False for bee in range (number_of_bees)]
-  bee_data["distance_travelled"] = [0. for bee in range (number_of_bees)]
-  return(bee_data)
+  for ind in range (number_of_bees) : 
+
+    bee_data.loc[ind,"number_of_resources_foraged"] = 0
+    bee_data.loc[ind,"bout_finished"] = False
+    bee_data.loc[ind,"distance_travelled"] = 0.

@@ -58,7 +58,7 @@ def get_matrix_of_distances_between_flowers(array_geometry) :
 	Outputs: 
 		matrix_of_pairwise_distances: matrix of size number_of_flowers*number_of_flowers gibing the euclidean distance between pairs of flowers
 	"""
-	matrix_of_coordinates = array_geometry.iloc[:,1:3] # keep the coordinates
+	matrix_of_coordinates = array_geometry[["x","y"]] # keep the coordinates
 	matrix_of_pairwise_distances = euclidean_distances (matrix_of_coordinates,matrix_of_coordinates)
 	return(matrix_of_pairwise_distances)
 
@@ -112,8 +112,7 @@ def initialize_probability_matrix_list(array_geometry,dist_factor,number_of_bees
     List of probability matrices (one for each bee)
   """
   distance_between_flowers = get_matrix_of_distances_between_flowers(array_geometry)
-  probability_matrix = normalize_matrix_by_row (give_probability_of_vector_with_dist_factor(distance_between_flowers,dist_factor))
-  return ([probability_matrix for bee in range (number_of_bees)])
+  return ([normalize_matrix_by_row (give_probability_of_vector_with_dist_factor(distance_between_flowers,dist_factor)) for bee in range (number_of_bees)])
 
 
 def compute_route_quality(number_of_resources_foraged,route_length) : 
@@ -126,7 +125,7 @@ def compute_route_quality(number_of_resources_foraged,route_length) :
 	Outputs:
 		Route quality (float)
 	"""
-	return(number_of_resources**2/route_length)
+	return(number_of_resources_foraged**2/route_length)
 
 
 def get_route_quality(route,array_geometry,list_of_resources_foraged) : 

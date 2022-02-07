@@ -5,7 +5,6 @@ Contact: julianemailly0gmail.com
 
 import os
 import numpy as np
-import parameters
 import geometry_functions
 import other_functions
 import pandas as pd
@@ -134,7 +133,7 @@ def generate_number_of_flowers_per_patch(number_of_resources,number_of_patches) 
   return(sampled_flowers+1)
 
 
-def get_patchy_array(number_of_resources,number_of_patches,patchiness_index,env_size,flowers_per_patch=None,silent=False) : 
+def get_patchy_array(number_of_resources,number_of_patches,patchiness_index,env_size,flowers_per_patch,silent_sim) : 
   """
   Description: 
     Generate an environment of flowers procedurally.
@@ -207,7 +206,8 @@ def get_patchy_array(number_of_resources,number_of_patches,patchiness_index,env_
       number_of_failed_positioning_in_a_row += 1
 
     if number_of_failed_positioning_in_a_row > max_failed_positioning_tolerated : 
-      print('get_patchy_array failed to position a patch center more than '+str(max_failed_positioning_tolerated)+' times in a row: increasing the range of possible positions by '+str(dist_nest_increment))
+      if not silent_sim : 
+        print('get_patchy_array failed to position a patch center more than '+str(max_failed_positioning_tolerated)+' times in a row: increasing the range of possible positions by '+str(dist_nest_increment))
       dist_max_to_nest += dist_nest_increment
       number_of_failed_positioning_in_a_row = 0
 
@@ -228,7 +228,7 @@ def get_patchy_array(number_of_resources,number_of_patches,patchiness_index,env_
     patch_center = patch_centers[patch,:] 
     number_of_flowers_in_patch = flowers_per_patch[patch] 
  
-    for index_flower_in_patch in range (number_of_flowers_in_patch) : 
+    for index_flower_in_patch in range (int(number_of_flowers_in_patch)) : 
 
       # The first flower in every patch is located at the patch center:
       if index_flower_in_patch == 0 : 
@@ -251,7 +251,8 @@ def get_patchy_array(number_of_resources,number_of_patches,patchiness_index,env_
           flower_is_sufficiently_far = check_if_flower_is_sufficiently_far(current_flower_coordinates, dist_min_flower_flower, other_flowers_coordinates)
 
           if number_of_failed_positioning_in_a_row > max_failed_positioning_tolerated : 
-            print('get_patchy_array failed to position a flower more than '+str(max_failed_positioning_tolerated)+' times in a row: increasing the range of possible positions by '+str(dist_patch_increment))
+            if not silent_sim : 
+              print('get_patchy_array failed to position a flower more than '+str(max_failed_positioning_tolerated)+' times in a row: increasing the range of possible positions by '+str(dist_patch_increment))
             dist_max_to_patch += dist_patch_increment
             number_of_failed_positioning_in_a_row = 0
 
@@ -266,7 +267,7 @@ def get_patchy_array(number_of_resources,number_of_patches,patchiness_index,env_
   return(array_geometry)
 
 
-def create_environment (array_info, array_number, reuse_generated_arrays = parameters.reuse_generated_arrays, silent_sim = parameters.silent_sim) : 
+def create_environment (array_info, array_number, reuse_generated_arrays, silent_sim) : 
 
   '''
   Description:
@@ -307,7 +308,7 @@ def create_environment (array_info, array_number, reuse_generated_arrays = param
         print("Generating new array. Array ID is: "+ array_info['array_ID']+".\n")
 
       os.mkdir(array_folder)
-      array_geometry = get_patchy_array(array_info['number_of_resources'],array_info['number_of_patches'],array_info['patchiness_index'],array_info['env_size'],array_info['flowers_per_patch']) 
+      array_geometry = get_patchy_array(array_info['number_of_resources'],array_info['number_of_patches'],array_info['patchiness_index'],array_info['env_size'],array_info['flowers_per_patch'],silent_sim) 
 
       # Write the array and parameters
       array_info_saved = array_info

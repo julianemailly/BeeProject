@@ -119,7 +119,7 @@ def apply_online_learning(probability_matrix,state,action,reward,learning_factor
   Outputs: 
     Updated probability matrix
   """ 
-  if reward >=0 : 
+  if reward >0 : 
     factor = learning_factor
   else :
     factor = abandon_factor
@@ -150,11 +150,11 @@ def online_learning(cost_of_flying,array_geometry,use_Q_learning,learning_array,
   if use_Q_learning :
     if cost_of_flying : 
       reward  = reward - matrix_of_pairwise_distances[state,action]/max_distance_between_flowers
-    learning_array = apply_online_learning(probability_matrix,state,action,reward,learning_factor,abandon_factor)
+    learning_array = apply_online_Q_learning(learning_array,state,action,reward,alpha_pos,alpha_neg,gamma_QL)
   else : 
     if reward == 0 :
       reward = -1
-    learning_array = apply_online_learning(probability_matrix,state,action,reward,learning_factor,abandon_factor)
+    learning_array = apply_online_learning(learning_array,state,action,reward,learning_factor,abandon_factor)
 
   return(learning_array)
 
