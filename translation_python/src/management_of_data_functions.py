@@ -21,10 +21,13 @@ def initialize_bee_data(number_of_bees,param_tracking,param_indiv) :
     bee_data: pandas dataframe containing information about bees that will be changed throughout the simulation. nrows = number_of_bees, ncol = number of attributes of param_trancking+number of attributes of param_indiv+2
   """
   for key in param_indiv : 
-    param_indiv[key] = [param_indiv[key] for k in range (number_of_bees)] 
+    if not isinstance(param_indiv[key],list) :
+      param_indiv[key] = [param_indiv[key] for k in range (number_of_bees)] 
+    else : 
+      if len(param_indiv[key]) != number_of_bees : 
+        raise ValueError("Impossible to initialize dataframe of bee data because of parameter "+str(key)+" contains lists whose number of elements is different from the number of bees.")
   for key in param_tracking : 
-    if not (key == "starting_bout_for_naive" and param_tracking["different_experience_simulation"]) :
-      param_tracking[key] = [param_tracking[key] for k in range (number_of_bees)]  
+    param_tracking[key] = [param_tracking[key] for k in range (number_of_bees)]  
   dict_of_bee_data = {"ID": [bee for bee in range (number_of_bees)]}
   dict_of_bee_data.update(param_tracking)
   dict_of_bee_data.update(param_indiv)
@@ -32,7 +35,7 @@ def initialize_bee_data(number_of_bees,param_tracking,param_indiv) :
   return(bee_data)
 
 
-def build_bee_info(number_of_bees,param_indiv,array_ID) :
+def initialize_bee_info(number_of_bees,param_indiv,array_ID) :
   """
   Description:
     Sets up a data frame of parameters of bees.
@@ -44,14 +47,19 @@ def build_bee_info(number_of_bees,param_indiv,array_ID) :
     bee_info: pandas dataframe with information about bees that will be stored at the end. nrows = number_of_bees, ncol = number of attributes of param_indiv+2
   """
   for key in param_indiv : 
-    if not (key == "starting_bout_for_naive" and aram_tracking["different_experience_simulation"]) :
-      param_tracking[key] = [param_tracking[key] for k in range (number_of_bees)]  
+    if not isinstance(param_indiv[key],list) :
+      param_indiv[key] = [param_indiv[key] for k in range (number_of_bees)] 
+    else : 
+      if len(param_indiv[key]) != number_of_bees : 
+        raise ValueError("Impossible to inistialize dataframe of bee info because of parameter "+str(key)+" contains lists whose number of elements is different from the number of bees.")  
   dict_of_bee_info = {"ID": [bee for bee in range (number_of_bees)]}
   dict_of_bee_info.update(param_indiv)
-  dict_of_bee_info.update({'array_ID':array_ID})
+  #dict_of_bee_info.update({'array_ID':array_ID})
   bee_info = pd.DataFrame(dict_of_bee_info)
-  bee_info.drop(columns = ["best_route_quality"])
-  return(bee_info)
+  try : 
+    bee_info.drop(columns = ["best_route_quality"])
+  finally : 
+    return(bee_info)
 
 
 def reboot_bee_data(bee_data) : 

@@ -9,6 +9,7 @@ import geometry_functions
 import other_functions
 import pandas as pd
 import re
+import copy
 
 current_working_directory = os.getcwd()
 
@@ -46,7 +47,7 @@ def create_array_ID(array_info,array_number) :
     flowers_per_patch_string = 'None'
   else : 
     flowers_per_patch_string = ''.join(map(str,array_info['flowers_per_patch']))
-  array_ID = "Array-" + str(array_info["number_of_resources"]) + str(array_info["number_of_patches"]) + "-" + str(array_info["patchiness_index"]) + "-" + flowers_per_patch_string + "-" + str(array_info["env_size"]) + "_" + "{:02d}".format(array_number)
+  array_ID = "Array-" + str(array_info["number_of_flowers"]) + str(array_info["number_of_patches"]) + "-" + str(array_info["patchiness_index"]) + "-" + flowers_per_patch_string + "-" + str(array_info["env_size"]) + "_" + "{:02d}".format(array_number)
   return(array_ID)
 
 
@@ -112,18 +113,18 @@ def check_if_flower_is_sufficiently_far(coordinates_of_current_flower, minimal_d
   return (checking_distance_with_flower_number == (number_of_flowers_to_check - 1) and distance_with_current_flower>=minimal_distance_between_flowers)
 
 
-def generate_number_of_flowers_per_patch(number_of_resources,number_of_patches) : 
+def generate_number_of_flowers_per_patch(number_of_flowers,number_of_patches) : 
   """
   Description:
     Generate a certain number of flowers per patch respecting the total number of flowers by sampling a Poisson distribution 
     More precisely, there is at least 1 flower per patch and the rest is sampled randomly
   Inputs:
-    number_of_resources: total number of flowers
+    number_of_flowers: total number of flowers
     number_of_patches: total number of patches
   Outputs:
     Array with number of flowers per patch 
   """
-  flowers_to_sample = number_of_resources - number_of_patches
+  flowers_to_sample = number_of_flowers - number_of_patches
   lambda_poisson = flowers_to_sample/number_of_patches 
   sampled_flowers = np.zeros(number_of_patches)
 
@@ -133,7 +134,7 @@ def generate_number_of_flowers_per_patch(number_of_resources,number_of_patches) 
   return(sampled_flowers+1)
 
 
-def get_patchy_array(number_of_resources,number_of_patches,patchiness_index,env_size,flowers_per_patch,silent_sim) : 
+def get_patchy_array(number_of_flowers,number_of_patches,patchiness_index,env_size,flowers_per_patch,silent_sim) : 
   """
   Description: 
     Generate an environment of flowers procedurally.
@@ -142,7 +143,7 @@ def get_patchy_array(number_of_resources,number_of_patches,patchiness_index,env_
     Most of the distances between the flowers and patches are depending on the perception_range and the env_size.
     Choose them wisely to create a relevant environment for your species.
   Inputs:
-    number_of_resources: 
+    number_of_flowers: total number of flowers 
     patchiness_index: float between 0 (nearly uniform distribution of flowers) and 1 (very patchy), depicting the degree of patchiness_index.
   Outputs:
     array_geometry: pandas dataframe with 4 columns: (flower) ID, x, y, patch (ID)
@@ -152,10 +153,11 @@ def get_patchy_array(number_of_resources,number_of_patches,patchiness_index,env_
 
   if patchiness_index >1 or patchiness_index <0 : 
     raise ValueError("Unsupported patchiness index. Values can range between 0 and 1.")
-  if number_of_patches > number_of_resources : 
-    raise ValueError("You must have at least one resources per patch.")
-  if number_of_resources == 0 or number_of_patches == 0 :
-    raise ValueError("You must at least have one resource and one patch.")
+  if number_of_patches > number_of_flowers : 
+    raise ValueError("You must have at least one flower per patch.")
+  if number_of_flowers == 0 or number_of_patches == 0 :
+    raise ValueError("You must at least have one flower and one patch.")
+  print(env_size)
   if (4*perception_range >= env_size) :
     raise ValueError("The environment size must be at least superior to 4 times the perception range (10 by default).")
   if flowers_per_patch is not None and len(flowers_per_patch)!=number_of_patches : 
@@ -175,7 +177,7 @@ def get_patchy_array(number_of_resources,number_of_patches,patchiness_index,env_
 
   # Initialize output matrices 
   patch_centers = np.zeros((number_of_patches,2))
-  array_geometry = np.zeros((number_of_resources+1,4)) # future columns: ID, x, y, patch
+  array_geometry = np.zeros((number_of_flowers+1,4)) # future columns: ID, x, y, patch
 
   
   # We create a first patch center
@@ -216,7 +218,7 @@ def get_patchy_array(number_of_resources,number_of_patches,patchiness_index,env_
   
   # If the flowers are not yet divided into patches:
   if (flowers_per_patch is None) : 
-    flowers_per_patch = generate_number_of_flowers_per_patch(number_of_resources,number_of_patches)
+    flowers_per_patch = generate_number_of_flowers_per_patch(number_of_flowers,number_of_patches)
    
   # We now know how many flowers to put at each patch
   # Start filling the array_geometry matrix 
@@ -308,10 +310,10 @@ def create_environment (array_info, array_number, reuse_generated_arrays, silent
         print("Generating new array. Array ID is: "+ array_info['array_ID']+".\n")
 
       os.mkdir(array_folder)
-      array_geometry = get_patchy_array(array_info['number_of_resources'],array_info['number_of_patches'],array_info['patchiness_index'],array_info['env_size'],array_info['flowers_per_patch'],silent_sim) 
+      array_geometry = get_patchy_array(array_info['number_of_flowers'],array_info['number_of_patches'],array_info['patchiness_index'],array_info['env_size'],array_info['flowers_per_patch'],silent_sim) 
 
       # Write the array and parameters
-      array_info_saved = array_info
+      array_info_saved = copy.deepcopy(array_info)
       
       if array_info_saved['flowers_per_patch'] is not None : 
         array_info_saved['flowers_per_patch'] =''.join(map(str,array_info_saved['flowers_per_patch']))

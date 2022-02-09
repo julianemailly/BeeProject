@@ -115,17 +115,20 @@ def initialize_probability_matrix_list(array_geometry,dist_factor,number_of_bees
   return ([normalize_matrix_by_row (give_probability_of_vector_with_dist_factor(distance_between_flowers,dist_factor)) for bee in range (number_of_bees)])
 
 
-def compute_route_quality(number_of_resources_foraged,route_length) : 
+def compute_route_quality(flowers_per_patch_foraged,route_length) : 
 	"""
 	Description:
 		Route quality evaluation function
 	Inputs:
-		number_of_resources_foraged: number of flowers collected
+		flowers_per_patch_foraged: number of flowers collected
 		route_length: distance covered by the bee
 	Outputs:
 		Route quality (float)
 	"""
-	return(number_of_resources_foraged**2/route_length)
+	if route_length == 0 :
+		return(0)
+	else :
+		return(flowers_per_patch_foraged**2/route_length)
 
 
 def get_route_quality(route,array_geometry,list_of_resources_foraged) : 
@@ -148,7 +151,7 @@ def get_route_quality(route,array_geometry,list_of_resources_foraged) :
 		return(route_quality)
 
 
-def formating_route(route):
+def formatting_route(route):
 	"""
 	Description: 
 		Takes a route such as [0,n1,n2,...,np,0,...,0] and remove the unecessary 0 to make [0,n1,n2,...,np,0]

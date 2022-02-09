@@ -7,7 +7,7 @@ import numpy as np
 import os
 import pandas as pd
 import management_of_data_functions
-import simulation_functions
+import bout_functions
 
 
 # Optimal route assessment  --------------------------------------------------------------
@@ -58,11 +58,9 @@ def optimal_route_assessment(array,array_geometry,bee_data,initial_probability_m
     for bout in range (number_of_bouts) : 
 
       management_of_data_functions.reboot_bee_data(bee_data)
-      current_bout =  simulation_functions.competitive_route(bout,array_geometry,probability_array_list,bee_data,optimal_route_quality,True,output_folder,number_of_bees=number_of_bees)
+      current_bout =  bout_functions.competitive_route(bout,array_geometry,probability_array_list,bee_data,optimal_route_quality,True,output_folder,number_of_bees=number_of_bees)
 
       #update variables
-      probability_array_list = current_bout["learning"]
-      bee_data = current_bout["bee_data"]
       optimal_route_quality = current_bout["optimal_route_quality"]
 
       matrix_of_bee_data[i,0] = sim
@@ -80,7 +78,7 @@ def optimal_route_assessment(array,array_geometry,bee_data,initial_probability_m
   # Assess the max quality attained in all sim
   sim_opt_route_quality = np.max(best_quality_of_sim)
   
-  # Reformating best_route_sim to be a numpy array
+  # Reformatting best_route_sim to be a numpy array
   max_nrow,max_ncol = 0,0
   for sim in range (number_of_simulations) : 
     nrow,ncol = np.shape(best_route_sim[sim])
@@ -134,88 +132,92 @@ def optimal_route_assessment_2_ind(array,array_geometry,bee_data,initial_probabi
   number_of_bouts = 30
   number_of_bees = 2
 
-  list_of_visitation_sequences = []
-  list_of_resources_taken = []
+  if len(bee_data.index) < number_of_bees : 
+    if not silent_sim : 
+      print("Assessing the optimal route for two individuals is not possible: number_of_bees < 2")
+    return(None)
 
-  matrix_of_bee_data = np.full((number_of_simulations*number_of_bouts, 2),None)
+  else : 
+    list_of_visitation_sequences = []
+    list_of_resources_taken = []
 
-  best_quality_of_sim = np.zeros(number_of_simulations)
-  best_route_sim = []
+    matrix_of_bee_data = np.full((number_of_simulations*number_of_bouts, 2),None)
 
-  i = 0
+    best_quality_of_sim = np.zeros(number_of_simulations)
+    best_route_sim = []
 
-  print(np.shape(initial_probability_matrix_list))
+    i = 0
 
-  # The simulations will be done without Q_Learning for the moment: 
-  saved_use_Q_learning = bee_data.loc[0,"use_Q_learning"]
-  saved_online_reinforcement = bee_data.loc[0,"online_reinforcement"]
-  for ind in range (number_of_bees) : 
-    bee_data.loc[ind, "use_Q_learning"] = True
-    bee_data.loc[ind, "online_reinforcement"] = True
+    print(np.shape(initial_probability_matrix_list))
 
-  for sim in range (number_of_simulations) : 
+    # The simulations will be done without Q_Learning for the moment: 
+    saved_use_Q_learning = bee_data.loc[0,"use_Q_learning"]
+    saved_online_reinforcement = bee_data.loc[0,"online_reinforcement"]
+    for ind in range (number_of_bees) : 
+      bee_data.loc[ind, "use_Q_learning"] = True
+      bee_data.loc[ind, "online_reinforcement"] = True
 
-    probability_array_list = initial_probability_matrix_list
+    for sim in range (number_of_simulations) : 
 
-    for bout in range (number_of_bouts) : 
-      management_of_data_functions.reboot_bee_data(bee_data)
-      current_bout =  simulation_functions.competitive_route(bout,array_geometry,probability_array_list,bee_data,optimal_route_quality,True,output_folder,number_of_bees=number_of_bees)
+      probability_array_list = initial_probability_matrix_list
 
-      #update variables
-      probability_array_list = current_bout["learning"]
-      bee_data = current_bout["bee_data"]
-      optimal_route_quality = current_bout["optimal_route_quality"]
+      for bout in range (number_of_bouts) : 
+        management_of_data_functions.reboot_bee_data(bee_data)
+        current_bout =  bout_functions.competitive_route(bout,array_geometry,probability_array_list,bee_data,optimal_route_quality,True,output_folder,number_of_bees=number_of_bees)
 
-      matrix_of_bee_data[i,0] = sim
-      matrix_of_bee_data[i,1] = current_bout["route_quality"][0] + current_bout["route_quality"][1] # there are gonna be duplications of the same number but doesn't matter
+        #update variables
+        optimal_route_quality = current_bout["optimal_route_quality"]
 
-      list_of_visitation_sequences.append(current_bout["sequences"])
-      i = i + 1
+        matrix_of_bee_data[i,0] = sim
+        matrix_of_bee_data[i,1] = current_bout["route_quality"][0] + current_bout["route_quality"][1] # there are gonna be duplications of the same number but doesn't matter
 
-      list_of_resources_taken.append(current_bout["list_of_bout_resources"])
+        list_of_visitation_sequences.append(current_bout["sequences"])
+        i = i + 1
 
-    qualities_of_sim = matrix_of_bee_data[matrix_of_bee_data[:,0]==sim,1]
-    best_quality_of_sim[sim] = np.max(qualities_of_sim)
-    bout_of_best_quality = int(np.ceil(np.argmax(qualities_of_sim)/2)) # need to account for the repetitions in the bouts due to the nb of bees
-    best_route_sim.append(list_of_visitation_sequences[sim*number_of_bouts+bout_of_best_quality])
+        list_of_resources_taken.append(current_bout["list_of_bout_resources"])
 
-
-  # Assess the max quality attained in each sim
-  sim_opt_route_quality = np.max(best_quality_of_sim)
-  print(sim)
-
-  # Reformating best_route_sim to be a numpy array
-  max_nrow,max_ncol = 0,0
-  for sim in range (number_of_simulations) : 
-    nrow,ncol = np.shape(best_route_sim[sim])
-    if nrow > max_nrow : 
-      max_nrow = nrow
-    if ncol > max_ncol : 
-      max_ncol = ncol
-
-  best_route_sim_array = np.full((number_of_simulations,max_nrow,max_ncol),0)
-  for sim in range (number_of_simulations) : 
-    nrow,ncol = np.shape(best_route_sim[sim])
-    best_route_sim_array[sim,:nrow,:ncol] = best_route_sim[sim]
-  best_route_sim = best_route_sim_array
-
-  sim_reach_opti = best_route_sim[np.array(best_quality_of_sim) == sim_opt_route_quality]
-  all_best_routes = np.unique(sim_reach_opti,axis=0)
-
-  proportion_of_sim_with_opt_qual = 100* np.sum(best_quality_of_sim==sim_opt_route_quality) / len(best_quality_of_sim)
+      qualities_of_sim = matrix_of_bee_data[matrix_of_bee_data[:,0]==sim,1]
+      best_quality_of_sim[sim] = np.max(qualities_of_sim)
+      bout_of_best_quality = int(np.ceil(np.argmax(qualities_of_sim)/2)) # need to account for the repetitions in the bouts due to the nb of bees
+      best_route_sim.append(list_of_visitation_sequences[sim*number_of_bouts+bout_of_best_quality])
 
 
-  if not silent_sim : 
-    print("Out of "+str(number_of_simulations)+" simulations in "+str(array)+", "+str(proportion_of_sim_with_opt_qual)+"% reached the maximum quality of "+str(sim_opt_route_quality)+". Setting this value as optimal route quality.")
-    print("A total of "+str(len(all_best_routes))+" routes had this quality. They were the following :")
-    print(all_best_routes)
+    # Assess the max quality attained in each sim
+    sim_opt_route_quality = np.max(best_quality_of_sim)
+    print(sim)
 
-  # Do not forget to put back the original use_Q_learning and online_reinforcement paramters in bee_data: 
-  for ind in range (number_of_bees) : 
-    bee_data.loc[ind, "use_Q_learning"] = saved_use_Q_learning
-    bee_data.loc[ind, "online_reinforcement"] = saved_online_reinforcement
+    # Reformatting best_route_sim to be a numpy array
+    max_nrow,max_ncol = 0,0
+    for sim in range (number_of_simulations) : 
+      nrow,ncol = np.shape(best_route_sim[sim])
+      if nrow > max_nrow : 
+        max_nrow = nrow
+      if ncol > max_ncol : 
+        max_ncol = ncol
 
-  return(sim_opt_route_quality)
+    best_route_sim_array = np.full((number_of_simulations,max_nrow,max_ncol),0)
+    for sim in range (number_of_simulations) : 
+      nrow,ncol = np.shape(best_route_sim[sim])
+      best_route_sim_array[sim,:nrow,:ncol] = best_route_sim[sim]
+    best_route_sim = best_route_sim_array
+
+    sim_reach_opti = best_route_sim[np.array(best_quality_of_sim) == sim_opt_route_quality]
+    all_best_routes = np.unique(sim_reach_opti,axis=0)
+
+    proportion_of_sim_with_opt_qual = 100* np.sum(best_quality_of_sim==sim_opt_route_quality) / len(best_quality_of_sim)
+
+
+    if not silent_sim : 
+      print("Out of "+str(number_of_simulations)+" simulations in "+str(array)+", "+str(proportion_of_sim_with_opt_qual)+"% reached the maximum quality of "+str(sim_opt_route_quality)+". Setting this value as optimal route quality.")
+      print("A total of "+str(len(all_best_routes))+" routes had this quality. They were the following :")
+      print(all_best_routes)
+
+    # Do not forget to put back the original use_Q_learning and online_reinforcement paramters in bee_data: 
+    for ind in range (number_of_bees) : 
+      bee_data.loc[ind, "use_Q_learning"] = saved_use_Q_learning
+      bee_data.loc[ind, "online_reinforcement"] = saved_online_reinforcement
+
+    return(sim_opt_route_quality)
 
 
 def sim_detection_optimal_route(array,array_geometry,bee_data,initial_probability_matrix_list,output_folder,silent_sim,optimal_route_quality) : 
@@ -237,7 +239,6 @@ def sim_detection_optimal_route(array,array_geometry,bee_data,initial_probabilit
   if not silent_sim : 
     print("Checking on array folder : "+output_folder)
   known_files =  np.array(os.listdir(output_folder))
-  print('known_files: ', known_files)
   number_of_files = len(known_files)
 
   if (number_of_files>0) and ("optimal_route.csv" in known_files) : 
@@ -294,8 +295,8 @@ def sim_detection_optimal_route_2_ind(array,array_geometry,bee_data,initial_prob
 
 
 #test
-
 """
+
 import geometry_functions
 import spatial_array_generation_and_manipulation_functions
 
@@ -322,16 +323,15 @@ array_number = 1
 
 current_pos = 1
 previous_pos = 0
-number_of_bees = 2
-number_of_flowers = 10
-array_of_vector_used = np.zeros((number_of_flowers,number_of_flowers,number_of_bees))
+number_of_bees = 1
+number_of_flowers_plus_nest = 10
 
 optimal_route_quality = 0
 silent_sim = False
 
 array = "test_name_array"
 array_number = 1
-array_info = {'environment_type':'generate', 'number_of_resources' : 5, 'number_of_patches' : 1, 'patchiness_index' : 0, 'env_size' : 500, 'flowers_per_patch' : None }
+array_info = {'environment_type':'generate', 'number_of_flowers' : number_of_flowers_plus_nest-1, 'number_of_patches' : 1, 'patchiness_index' : 0, 'env_size' : 500, 'flowers_per_patch' : None }
 array_geometry, array_info_new, array_folder = spatial_array_generation_and_manipulation_functions.create_environment (array_info, array_number,True,False)
 print('array geometry ',array_geometry)
 param_tracking = {"starting_bout_for_naive":starting_bout_for_naive,"different_experience_simulation":different_experience_simulation,"number_of_resources_foraged" : 0,"bout_finished": False,"distance_travelled":0.}
@@ -344,5 +344,5 @@ output_folder = current_working_directory+'\\Arrays'
 optimal_route_quality = 0
 
 optimal_route=sim_detection_optimal_route_2_ind(array,array_geometry,bee_data,initial_probability_matrix_list,array_folder,silent_sim,optimal_route_quality) 
-print(optimal_route)
+
 """

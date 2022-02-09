@@ -80,8 +80,11 @@ def softmax(values_vector,beta_QL) :
     Outputs:
       Vector of probabilities 
     """
-    values_vector = np.array(values_vector)
-    return(np.exp(beta_QL*values_vector)/np.sum(np.exp(beta_QL*values_vector)))
+    if len(values_vector) == 0 : 
+      return([])
+    else : 
+      values_vector = np.array(values_vector)
+      return(np.exp(beta_QL*values_vector)/np.sum(np.exp(beta_QL*values_vector)))
 
 
 def apply_online_Q_learning(Q_table,state,action,reward,alpha_pos,alpha_neg,gamma_QL) : 
