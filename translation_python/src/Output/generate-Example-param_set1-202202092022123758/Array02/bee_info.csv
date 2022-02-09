@@ -1,3 +1,0 @@
-ID,initialize_Q_table,starting_bout_for_naive,different_experience_simulation,max_fails,route_compare,max_distance_travelled,max_crop,probability_of_winning,dynamic_beta,beta_QL_vector,leave_after_max_fail,forbid_reverse_vector,allow_nest_return,beta_QL,alpha_pos,alpha_neg,gamma_QL,use_Q_learning,online_reinforcement,cost_of_flying,learning_factor,abandon_factor
-0,distance,0,False,2,False,10000,5,0.5,False,,True,True,False,2,0.2,0.2,0,False,True,False,1.5,0.75
-1,distance,0,False,2,False,10000,5,0.5,False,,True,True,False,2,0.2,0.2,0,False,True,False,1.5,0.75

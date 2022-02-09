@@ -131,7 +131,7 @@ def compute_route_quality(flowers_per_patch_foraged,route_length) :
 		return(flowers_per_patch_foraged**2/route_length)
 
 
-def get_route_quality(route,array_geometry,list_of_resources_foraged) : 
+def get_quality_of_route(route,array_geometry,list_of_resources_foraged) : 
 	"""
 	Description:
 		Computes the route quality of a given visitation sequence

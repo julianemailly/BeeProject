@@ -70,13 +70,13 @@ def apply_learning (route, probability_matrix,flower_outcome_matrix,bee_data,rou
     return(probability_matrix)
 
 
-def softmax(values_vector,beta_QL) : 
+def softmax(values_vector,beta) : 
     """
     Description:
       Return the probabilities of choosing options characterised by some values by using a softmax decision function
     Inputs:
       values_vector: numpy array of values
-      beta_QL: inverse temperature parameter (must be positive)
+      beta: inverse temperature parameter (must be positive)
     Outputs:
       Vector of probabilities 
     """
@@ -84,10 +84,10 @@ def softmax(values_vector,beta_QL) :
       return([])
     else : 
       values_vector = np.array(values_vector)
-      return(np.exp(beta_QL*values_vector)/np.sum(np.exp(beta_QL*values_vector)))
+      return(np.exp(beta*values_vector)/np.sum(np.exp(beta*values_vector)))
 
 
-def apply_online_Q_learning(Q_table,state,action,reward,alpha_pos,alpha_neg,gamma_QL) : 
+def apply_online_Q_learning(Q_table,state,action,reward,alpha_pos,alpha_neg,gamma) : 
   """
   Description: 
     A bee with Q Table (QTable), is in state (state), does action (action), gets a reward (reward)
@@ -100,7 +100,7 @@ def apply_online_Q_learning(Q_table,state,action,reward,alpha_pos,alpha_neg,gamm
   Outputs: 
     Updated Q table
   """
-  delta = reward+gamma_QL*np.max(Q_table[action,:])-Q_table[state,action]
+  delta = reward+gamma*np.max(Q_table[action,:])-Q_table[state,action]
   if delta >= 0 :
     Q_table[state,action] = Q_table[state,action] + alpha_pos*delta
   else : 
@@ -131,7 +131,7 @@ def apply_online_learning(probability_matrix,state,action,reward,learning_factor
   return(probability_matrix)
 
 
-def online_learning(cost_of_flying,array_geometry,use_Q_learning,learning_array,state,action,reward,alpha_pos,alpha_neg,gamma_QL,learning_factor,abandon_factor) : 
+def online_learning(cost_of_flying,array_geometry,use_Q_learning,learning_array,state,action,reward,alpha_pos,alpha_neg,gamma,learning_factor,abandon_factor) : 
   """
   Description: 
     Arbitration between the two apply_online_(Q)learning fuctions
@@ -143,7 +143,7 @@ def online_learning(cost_of_flying,array_geometry,use_Q_learning,learning_array,
     learning_factor: >=1 will increase the probabilty of doing an action
     abandon_factor: <=1 will decrease the porbability of doing an action
     alpha_pos(neg): learnig rate for positive(negative) outcomes 
-    gamma_QL: temportal discounting factor
+    gamma: temportal discounting factor
   Outputs: 
     Updated learning array  
   """
@@ -153,7 +153,7 @@ def online_learning(cost_of_flying,array_geometry,use_Q_learning,learning_array,
   if use_Q_learning :
     if cost_of_flying : 
       reward  = reward - matrix_of_pairwise_distances[state,action]/max_distance_between_flowers
-    learning_array = apply_online_Q_learning(learning_array,state,action,reward,alpha_pos,alpha_neg,gamma_QL)
+    learning_array = apply_online_Q_learning(learning_array,state,action,reward,alpha_pos,alpha_neg,gamma)
   else : 
     if reward == 0 :
       reward = -1

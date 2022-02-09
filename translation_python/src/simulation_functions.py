@@ -15,7 +15,7 @@ import itertools
 import bout_functions
 import management_of_data_functions
 import geometry_functions
-import spatial_array_generation_and_manipulation_functions
+import environment_generation_functions
 import learning_functions
 import optimal_route_assessment_functions
 
@@ -117,9 +117,7 @@ def simulation(test_name_general,array_info,number_of_arrays,parameters_loop,num
     for array_number in range (number_of_arrays): 
 
       # Generate array
-      print('............................................................',array_info["environment_type"])
-      array_geometry, array_info, array_folder = spatial_array_generation_and_manipulation_functions.create_environment(array_info, array_number, reuse_generated_arrays, silent_sim)
-      print('............................................................',array_info["environment_type"])
+      array_geometry, array_info, array_folder = environment_generation_functions.create_environment(array_info, array_number, reuse_generated_arrays, silent_sim)
       print("array_geometry:")
       print(array_geometry)
 
@@ -150,12 +148,12 @@ def simulation(test_name_general,array_info,number_of_arrays,parameters_loop,num
       np.savetxt(path, initial_Q_table_list[0], delimiter=',')
 
       # Get maximum route quality of the array (simulating _ 1Ind for 30 each bouts to try and find the optimal route).
-      optimal_route_quality = optimal_route_assessment_functions.sim_detection_optimal_route(array_info["array_ID"],array_geometry,bee_data,initial_probability_matrix_list,array_folder,silent_sim,0)
+      optimal_route_quality = optimal_route_assessment_functions.retrieve_optimal_route(array_info["array_ID"],array_geometry,bee_data,initial_probability_matrix_list,array_folder,silent_sim,0,number_of_bees=1)
       if not silent_sim : 
         print("Optimal route quality: "+str(optimal_route_quality))
 
       # Get maximum route quality for 2 ind of the array (simulating _ 2Ind for 30 each bouts to try and find the optimal route).
-      optimal_route_quality_2_ind = optimal_route_assessment_functions.sim_detection_optimal_route_2_ind(array_info["array_ID"],array_geometry,bee_data,initial_probability_matrix_list,array_folder,silent_sim,0)
+      optimal_route_quality_2_ind = optimal_route_assessment_functions.retrieve_optimal_route(array_info["array_ID"],array_geometry,bee_data,initial_probability_matrix_list,array_folder,silent_sim,0,number_of_bees=2)
       if not silent_sim : 
         print("Optimal route quality for 2 individuals: "+str(optimal_route_quality_2_ind))
 
@@ -200,7 +198,7 @@ def simulation(test_name_general,array_info,number_of_arrays,parameters_loop,num
             previous_learning_array_list = copy.deepcopy(learning_array_list)
 
           management_of_data_functions.reboot_bee_data(bee_data)
-          current_bout = bout_functions.competitive_route(bout,array_geometry,learning_array_list,bee_data,optimal_route_quality,silent_sim,array_folder)
+          current_bout = bout_functions.simulate_bout(bout,array_geometry,learning_array_list,bee_data,optimal_route_quality,silent_sim,array_folder)
           
           # For Sensitivity Analysis, compare previous_learning_array_list and learning_array_list
           if sensitivity_analysis : 

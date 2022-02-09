@@ -40,7 +40,7 @@ def give_omitted_destinations(ind,current_pos,previous_pos,array_of_vector_used,
   return(omitted_destinations)
 
 
-def get_probabilities_of_choosing_flowers(use_Q_learning,learning_array_list,ind,current_pos,destination_is_available,dynamic_beta,beta_QL_vector,bout,beta_QL) :
+def get_probabilities_of_choosing_flowers(use_Q_learning,learning_array_list,ind,current_pos,destination_is_available,dynamic_beta,beta_vector,bout,beta) :
   """
   Description:
     Give the probability of choosing among availabl destinations
@@ -50,10 +50,10 @@ def get_probabilities_of_choosing_flowers(use_Q_learning,learning_array_list,ind
     ind: index of individual
     current_pos: current position of individual
     destination_is_available: bool list such as destination_is_available[flower_ID] says if flower with ID flower_ID is amng the possible destinations
-    dynamic_beta: bool, if True will use a dynamic beta parameter whose values are specified in beta_QL_vector
-    beta_QL_vector: specifies the values of beta in case of dynamic beta
+    dynamic_beta: bool, if True will use a dynamic beta parameter whose values are specified in beta_vector
+    beta_vector: specifies the values of beta in case of dynamic beta
     bout: index of bout
-    beta_QL: specifies inverse temperature parameter if use_Q_Learning
+    beta: specifies inverse temperature parameter if use_Q_Learning
   Outputs:
     probabilities: a vector of probabilities
   """  
@@ -66,10 +66,10 @@ def get_probabilities_of_choosing_flowers(use_Q_learning,learning_array_list,ind
 
   else : 
     if dynamic_beta : 
-      probabilities = learning_functions.softmax(learning_array_list[ind][current_pos,destination_is_available],beta_QL_vector[bout])
+      probabilities = learning_functions.softmax(learning_array_list[ind][current_pos,destination_is_available],beta_vector[bout])
 
     else : 
-      probabilities = learning_functions.softmax(learning_array_list[ind][current_pos,destination_is_available],beta_QL)
+      probabilities = learning_functions.softmax(learning_array_list[ind][current_pos,destination_is_available],beta)
   return(probabilities)
 
 
@@ -90,10 +90,9 @@ def sampling_next_destination(number_of_bees,ind,bee_route,bee_data,array_of_vec
     Updated still_foraging, bee_route. bee_data is already modified in place
   """ 
   # Retrieve parameters of the simulation
-  beta_QL = bee_data["beta_QL"][0]
-  beta_QL_vector = bee_data["beta_QL_vector"][0]
+  beta = bee_data["beta"][0]
+  beta_vector = bee_data["beta_vector"][0]
   use_Q_learning = bee_data["use_Q_learning"][0]
-  leave_after_max_fail = bee_data["leave_after_max_fail"][0]
   dynamic_beta = bee_data["dynamic_beta"][0]
   online_reinforcement = bee_data["online_reinforcement"][0]
 
@@ -116,7 +115,7 @@ def sampling_next_destination(number_of_bees,ind,bee_route,bee_data,array_of_vec
     potential_destinations = np.delete(potential_destinations, np.where(potential_destinations==omitted_destination))
   destination_is_available = [not (flower in omitted_destinations) for flower in range (number_of_flowers)]
   # Define probabilities
-  probabilities = get_probabilities_of_choosing_flowers(use_Q_learning,learning_array_list,ind,current_pos,destination_is_available,dynamic_beta,beta_QL_vector,bout,beta_QL)
+  probabilities = get_probabilities_of_choosing_flowers(use_Q_learning,learning_array_list,ind,current_pos,destination_is_available,dynamic_beta,beta_vector,bout,beta)
   # If no positive probabilities
   if (np.sum(probabilities)==0) : 
     if current_pos == 0 : # The bee was already in the nest: triggering end of bout
@@ -198,7 +197,7 @@ def competitive_interaction_on_flower(flower,flowers_visited_this_bout,bee_data)
   return(interaction_winner,interaction_losers)
 
 
-def foraging_and_online_learning_loop(number_of_bees,bee_route,bee_data,array_of_vector_used,learning_array_list,individual_flower_outcome,array_geometry,list_of_bout_resources,resources_on_flowers,bout):
+def foraging_and_online_learning_loop(number_of_bees,bee_route,bee_data,array_of_vector_used,learning_array_list,individual_flower_outcome,array_geometry,resources_on_flowers,bout):
   """
   Description:
     Each bee will decide on wht flower it will go next and will be either rewarded or punished.
@@ -209,24 +208,21 @@ def foraging_and_online_learning_loop(number_of_bees,bee_route,bee_data,array_of
     learning_array_list: list of arrays on which the learning process will occur (either probability matrix or Q table)
     individual_flower_outcome: list of arrays containing the outcome of each transition for each individual
     array_geometry: pandas dataframe of size 4*number_of_flowers : flower ID, x, y, patch ID
-    list_of_bout_resources: list of list of individual who fed during each bout (0 if not, 1 if they fed)
     resources_on_flowers: list of resources on each flower
   Outputs:
     updated bee_route
-    list_of_bout_resources, resources_on_flowers, learning_array_list, array_of_vector_used, individual_flower_outcome, bee_data are also modified in place
+    resources_on_flowers, learning_array_list, array_of_vector_used, individual_flower_outcome, bee_data are also modified in place
   """ 
 
   # Retrieve parameters of the simulation
   alpha_pos = bee_data["alpha_pos"][0]
   alpha_neg = bee_data["alpha_neg"][0]
-  gamma_QL = bee_data["gamma_QL"][0]
+  gamma = bee_data["gamma"][0]
   use_Q_learning = bee_data["use_Q_learning"][0]
   online_reinforcement = bee_data["online_reinforcement"][0]
-  #print("online_reinforcement: ",online_reinforcement)
   cost_of_flying = bee_data["cost_of_flying"][0]
   learning_factor = bee_data["learning_factor"][0]
   abandon_factor = bee_data["abandon_factor"][0]
-  leave_after_max_fail = bee_data["leave_after_max_fail"][0]
 
   number_of_flowers = len(array_geometry.index)
 
@@ -270,7 +266,7 @@ def foraging_and_online_learning_loop(number_of_bees,bee_route,bee_data,array_of
       if online_reinforcement : 
         #print('online punishment')
         #print('value of vector before learning: ',learning_array_list[loser][previous_flower,flower])
-        learning_array_list[loser] = learning_functions.online_learning(cost_of_flying,array_geometry,use_Q_learning,learning_array_list[loser],previous_flower,flower,0,alpha_pos,alpha_neg,gamma_QL,learning_factor,abandon_factor)
+        learning_array_list[loser] = learning_functions.online_learning(cost_of_flying,array_geometry,use_Q_learning,learning_array_list[loser],previous_flower,flower,0,alpha_pos,alpha_neg,gamma,learning_factor,abandon_factor)
         #print('value of vector after learning: ',learning_array_list[loser][previous_flower,flower])
   # If the bout is finished the bee does not feed
   who_feeds[bee_data.loc[:(number_of_bees-1),"bout_finished"]] = 0
@@ -285,15 +281,11 @@ def foraging_and_online_learning_loop(number_of_bees,bee_route,bee_data,array_of
 
     else: 
       who_feeds[ind] = 0
-
-  # Update whoFeeds output
-  list_of_bout_resources.append(who_feeds)
   
   # Increases the counter if no resource is found on the flower
-  #print('updating leave_after_max_fail')
   for ind in np.where(who_feeds==0)[0]:
     #print("checking unsuccessful_individual: ",ind)
-    if leave_after_max_fail: 
+    if bee_data["leave_after_max_fail"][ind]: 
       array_of_vector_used[bee_route[ind,-2],bee_route[ind,-1],ind] +=1
 
   # Check on passive punitive reaction (if flower was empty on first visit)
@@ -320,7 +312,7 @@ def foraging_and_online_learning_loop(number_of_bees,bee_route,bee_data,array_of
             # If needed, apply online reinforcement here
             if online_reinforcement : 
               #print('value of vector before learning: ',learning_array_list[ind][previous_flower,flower_visited])
-              learning_array_list[ind] = learning_functions.online_learning(cost_of_flying,array_geometry,use_Q_learning,learning_array_list[ind],previous_flower,flower_visited,1,alpha_pos,alpha_neg,gamma_QL,learning_factor,abandon_factor)           
+              learning_array_list[ind] = learning_functions.online_learning(cost_of_flying,array_geometry,use_Q_learning,learning_array_list[ind],previous_flower,flower_visited,1,alpha_pos,alpha_neg,gamma,learning_factor,abandon_factor)           
               #print('value of vector after learning: ',learning_array_list[ind][previous_flower,flower_visited])
         else : # Negative outcome for this flower 
           #print("negative outcome")
@@ -329,7 +321,7 @@ def foraging_and_online_learning_loop(number_of_bees,bee_route,bee_data,array_of
           # If needed, apply online reinforcement here
           if online_reinforcement : 
             #print('value of vector before learning: ',learning_array_list[ind][previous_flower,flower_visited])
-            learning_array_list[ind] = learning_functions.online_learning(cost_of_flying,array_geometry,use_Q_learning,learning_array_list[ind],previous_flower,flower_visited,0,alpha_pos,alpha_neg,gamma_QL,learning_factor,abandon_factor)   
+            learning_array_list[ind] = learning_functions.online_learning(cost_of_flying,array_geometry,use_Q_learning,learning_array_list[ind],previous_flower,flower_visited,0,alpha_pos,alpha_neg,gamma,learning_factor,abandon_factor)   
             #print('value of vector after learning: ',learning_array_list[ind][previous_flower,flower_visited])
 
   # Check end of foraging bout
@@ -343,13 +335,6 @@ def foraging_and_online_learning_loop(number_of_bees,bee_route,bee_data,array_of
     if bee_data["distance_travelled"][ind]>= bee_data["max_distance_travelled"][ind] : 
       #print("########### bout finished for individual "+str(ind)+" because it has reached its maximum travelled distance.")
       bee_data.loc[ind,"bout_finished"]=True
-
-  #print('individual_flower_outcome: ',individual_flower_outcome)
-  #print('bee_route: ',bee_route)
-  #print('list_of_bout_resources: ',list_of_bout_resources)
-  #print('resources_on_flowers: ', resources_on_flowers)
-  #print('learning_array_list: ', learning_array_list)
-  #print('array_of_vector_used: ',array_of_vector_used)
 
 
   return(bee_route)
@@ -389,7 +374,7 @@ def non_online_learning_and_route_quality_update(number_of_bees,bee_route,array_
     else : 
       #print("bout had started for individual ",ind) 
       route = geometry_functions.formatting_route(bee_route[ind,:])
-      route_quality = geometry_functions.get_route_quality(route,array_geometry,bee_data["number_of_resources_foraged"][ind])
+      route_quality = geometry_functions.get_quality_of_route(route,array_geometry,bee_data["number_of_resources_foraged"][ind])
       route_quality=round(route_quality,8)
 
       # Check if the new route quality is higher than the optimal route found initially. If so, replace old optimal route.
@@ -423,7 +408,7 @@ def non_online_learning_and_route_quality_update(number_of_bees,bee_route,array_
   return(route_qualities)
 
 
-def competitive_route(bout,array_geometry,learning_array_list,bee_data,optimal_route_quality,silent_sim,array_folder,number_of_bees=None) : 
+def simulate_bout(bout,array_geometry,learning_array_list,bee_data,optimal_route_quality,silent_sim,array_folder,number_of_bees=None) : 
   """
   Description: 
     Simulates a bout 
@@ -441,7 +426,6 @@ def competitive_route(bout,array_geometry,learning_array_list,bee_data,optimal_r
                             "sequences" giving the routes of the bees
                             "quality" giving the qualities of the routes
                             "optimal_route_quality" giving the optimal route quality computed so far
-                            "list_of_bout_resources" 
   """
 
   # Retrieve parameters of the simulation
@@ -449,14 +433,11 @@ def competitive_route(bout,array_geometry,learning_array_list,bee_data,optimal_r
     number_of_bees = len(bee_data.index)
   number_of_flowers = len(array_geometry.index)
 
-  leave_after_max_fail = bee_data.loc[0,"leave_after_max_fail"]
-
   # Initiialize data
   bee_route = np.zeros((number_of_bees,1)).astype(int)
   resources_on_flowers = np.ones(number_of_flowers)
   resources_on_flowers[0] = 0 # no resource in nest
   individual_flower_outcome = [np.zeros((number_of_flowers,number_of_flowers)) for bee in range (number_of_bees)]
-  list_of_bout_resources = []
 
   array_of_vector_used = np.zeros((number_of_flowers,number_of_flowers,number_of_bees))
 
@@ -469,64 +450,12 @@ def competitive_route(bout,array_geometry,learning_array_list,bee_data,optimal_r
   # Foraging loop: while at least one individual hasn't finished foraging
   while(np.sum(bee_data["bout_finished"])!=number_of_bees): 
     #print('number of bees that finished: ', np.sum(bee_data["bout_finished"]))
-    bee_route=foraging_and_online_learning_loop(number_of_bees,bee_route,bee_data,array_of_vector_used,learning_array_list,individual_flower_outcome,array_geometry,list_of_bout_resources,resources_on_flowers,bout)
+    bee_route=foraging_and_online_learning_loop(number_of_bees,bee_route,bee_data,array_of_vector_used,learning_array_list,individual_flower_outcome,array_geometry,resources_on_flowers,bout)
 
   # Learning loop: 
   route_qualities = non_online_learning_and_route_quality_update(number_of_bees, bee_route, array_geometry, bee_data, optimal_route_quality, silent_sim,array_folder, individual_flower_outcome, learning_array_list)
 
 
   bee_route = np.concatenate((bee_route,np.zeros((number_of_bees,1))),axis=1).astype(int) # For formatting
-  competitive_bout = {"sequences":bee_route, "route_quality": route_qualities, "optimal_route_quality":optimal_route_quality,"list_of_bout_resources":list_of_bout_resources}
+  competitive_bout = {"sequences":bee_route, "route_quality": route_qualities, "optimal_route_quality":optimal_route_quality}
   return(competitive_bout)
-
-
-
-
-"""
-alpha_pos = 0.5
-alpha_neg = 0.2
-gamma_QL = 0
-cost_of_flying = False
-learning_factor = 1.5
-abandon_factor = 0.75
-leave_after_max_fail = True
-
-different_experience_simulation = False
-starting_bout_for_naive=[0,0]
-
-online_reinforcement = True
-use_Q_learning = False
-dynamic_beta=True
-bout=0
-beta_QL=2
-beta_QL_vector=[[[2,2]]]
-array_number = 1
-
-current_pos = 1
-previous_pos = 0
-number_of_bees = 1
-number_of_flowers = 3
-array_of_vector_used = np.zeros((number_of_flowers,number_of_flowers,number_of_bees))
-
-optimal_route_quality = 0
-silent_sim = False
-
-import spatial_array_generation_and_manipulation_functions
-array_info = {'environment_type':'generate', 'number_of_flowers' : number_of_flowers-1, 'number_of_patches' : 1, 'patchiness_index' : 0, 'env_size' : 500, 'flowers_per_patch' : None }
-array_geometry, array_info_new, array_folder = spatial_array_generation_and_manipulation_functions.create_environment (array_info, array_number,True,False)
-print('array geometry ',array_geometry)
-
-
-import management_of_data_functions as man
-param_tracking = {"number_of_resources_foraged" : 0,"bout_finished": False,"distance_travelled":0.}
-param_indiv = {"starting_bout_for_naive":starting_bout_for_naive,"different_experience_simulation":different_experience_simulation,"max_fails":2,"route_compare":False,"max_distance_travelled": 10000,"max_crop":5,"probability_of_winning":0.5,"dynamic_beta":dynamic_beta,"beta_QL_vector":beta_QL_vector,"leave_after_max_fail": leave_after_max_fail, "max_fails":2,"forbid_reverse_vector": True,"allow_nest_return": False,"beta_QL": beta_QL,"alpha_pos":alpha_pos,"alpha_neg":alpha_neg,"gamma_QL":gamma_QL,"use_Q_learning":use_Q_learning,"online_reinforcement": online_reinforcement,"cost_of_flying":cost_of_flying,"learning_factor":learning_factor,"abandon_factor":abandon_factor}
-bee_data = man.initialize_bee_data(number_of_bees,param_tracking,param_indiv)
-
-learning_array_list = learning_functions.initialize_Q_table_list ("distance", array_geometry, 2, number_of_bees)
-
-print(learning_array_list)
-competitive_bout = competitive_route(bout,array_geometry,learning_array_list,bee_data,optimal_route_quality,silent_sim,array_folder,number_of_bees=None)
-print(learning_array_list)
-
-print(competitive_bout["sequences"])
-"""
