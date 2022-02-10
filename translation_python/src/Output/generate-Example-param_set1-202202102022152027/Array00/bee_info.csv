@@ -1,0 +1,3 @@
+ID,initialize_Q_table,starting_bout_for_naive,use_delay_start,route_compare,max_distance_travelled,max_crop,use_dynamic_beta,beta_vector,leave_after_max_fail,number_of_max_fails,forbid_reverse_vector,allow_nest_return,beta,alpha_pos,alpha_neg,gamma,use_Q_learning,use_online_reinforcement,cost_of_flying,learning_factor,abandon_factor,array_ID
+0,distance,,False,False,3000,5,False,,False,2,True,True,15,0.4,0.4,0,True,True,False,1.0,0.75,Array-61-0-None-500_00
+1,distance,,False,False,3000,5,False,,False,2,True,True,15,0.4,0.4,0,True,True,False,1.0,0.75,Array-61-0-None-500_00
