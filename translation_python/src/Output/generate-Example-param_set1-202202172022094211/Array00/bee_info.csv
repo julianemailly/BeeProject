@@ -1,0 +1,3 @@
+ID,probability_of_winning,max_distance_travelled,max_crop,beta_vector,leave_after_max_fail,number_of_max_fails,forbid_reverse_vector,allow_nest_return,beta,alpha_pos,alpha_neg,gamma,learning_factor,abandon_factor,use_route_compare,use_online_reinforcement,use_Q_learning,initialize_Q_table,dist_factor,cost_of_flying,use_dynamic_beta,use_delay_start,starting_bout_for_naive
+0,0.5,3000,5,,False,2,True,True,15.0,0.4,0.4,0,1.5,0.75,False,True,False,distance,2,False,False,False,
+1,0.5,3000,5,,False,2,True,True,15.0,0.4,0.4,0,1.5,0.75,False,True,False,distance,2,False,False,False,

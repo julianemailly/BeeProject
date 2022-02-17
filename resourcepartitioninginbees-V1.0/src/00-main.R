@@ -89,6 +89,8 @@ CompetitiveRoute = function(bout,arrayGeometry,learningArray,beeData,optimalRout
       
       # Retrieve all potential destinations
       potentialDestinations = (arrayGeometry$ID+1)[-omittedDestinations];
+      
+
       # Choose a destination : If no positive probabilities, go back to the nest (not triggering end of bout)
       if (!useQLearning) {probabilities=learningArray[[ind]][indPos,-omittedDestinations]
       } else {
@@ -98,20 +100,25 @@ CompetitiveRoute = function(bout,arrayGeometry,learningArray,beeData,optimalRout
           probabilities=SoftMax(learningArray[[ind]][indPos,-omittedDestinations],betaQL) 
         }
       };
+      
+      
       if(any(probabilities!=0))
       {
-        
-        if(length(potentialDestinations)>1) 
+
+        if(length(potentialDestinations)>1)
         {
           beeRoute[ind,visitNumber] = sample(potentialDestinations,size=1,
                                              prob=probabilities);
         } else {
           beeRoute[ind,visitNumber] = potentialDestinations;
         }
+
+
+        
         
       } else {
-        if(indPos==1) 
-        { 
+        if(indPos==1)
+        {
           beeData$boutFinished[ind] = TRUE;
           stillForaging = setdiff(stillForaging,ind);
           next
@@ -119,6 +126,8 @@ CompetitiveRoute = function(bout,arrayGeometry,learningArray,beeData,optimalRout
           beeRoute[ind,visitNumber] = 1;
         }
       };
+      
+      
       # Update distance travelled
       beeData$distanceTravelled[ind] = beeData$distanceTravelled[ind] + DistanceBetween(as.numeric(arrayGeometry[beeRoute[ind,visitNumber-1],2:3]),
                                                                                         as.numeric(arrayGeometry[beeRoute[ind,visitNumber],2:3]));
@@ -145,12 +154,14 @@ CompetitiveRoute = function(bout,arrayGeometry,learningArray,beeData,optimalRout
     whoFeeds = matrix(1,ncol=numberOfBees,nrow=1);
     for(flower in flowerInCompetition) 
     {
+      
       # Which individuals are in competition
       individualsInCompetition = which(beeRoute[,visitNumber]==flower);
       
       # Which wins and which loses
       interactionWinner = sample(individualsInCompetition,size=1,prob=beeData$winProbabilities[individualsInCompetition]);
       interactionLoser = setdiff(individualsInCompetition,interactionWinner);
+      
       
       # Set the loser's feeding potential to 0.
       whoFeeds[interactionLoser] = 0;
@@ -161,6 +172,7 @@ CompetitiveRoute = function(bout,arrayGeometry,learningArray,beeData,optimalRout
         if(indFlowerOutcome[[indLost]][beeRoute[indLost,visitNumber-1],flower]==0)
         {
           indFlowerOutcome[[indLost]][beeRoute[indLost,visitNumber-1],flower] = -1;
+          
           if(onlineReinforcement) 
           {
             if (!useQLearning){

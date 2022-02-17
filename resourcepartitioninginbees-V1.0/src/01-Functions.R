@@ -942,7 +942,8 @@ CreateVideoOutput = function(arrayGeometry,matrixOfVisitationSequences,listOfRes
 # Extra functions for the Q-Learning algorithm:
 
 SoftMax=function(valuesVector,betaQL){
-  return(exp(betaQL*valuesVector)/sum(exp(betaQL*valuesVector)))
+  s = sum(exp(betaQL*valuesVector));
+  return(exp(betaQL*valuesVector)/s)
 }
 
 ApplyOnlineQLearning=function(QTable,state,action,reward,alphaPos,alphaNeg,gammaQL){

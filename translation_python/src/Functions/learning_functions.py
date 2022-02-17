@@ -9,7 +9,7 @@ import geometry_functions
 
 # Learning --------------------------------------------------------------
 
-def apply_learning (route, probability_matrix,flower_outcome_matrix,bee_data,route_quality) : 
+def apply_learning (route, probability_matrix_list,individual_flower_outcome,bee_data,bee_info,route_quality,ind) : 
     """
     Description:
       Change the probability matrix of a individual depending on its last performed bout.
@@ -17,19 +17,22 @@ def apply_learning (route, probability_matrix,flower_outcome_matrix,bee_data,rou
       route: vector of the index of visited flowers during a bout
       probability_matrix: matrix of array size * array size, with probabilities to do each vector linking two flowers
       flower_outcome_matrix : matrix of array size * array size, with values of -1 (negative outcome), 0 (no visit) or 1 (positive outcome).
-      bee_data: pandas dataframe containing information about bees that will be changed throughout the simulation
+      bee_data: pandas dataframe of relvant data about the bees that will be updated during the simulation
+    bee_info: pandas dataframe of the parameters 
       route_quality : numeric value of last route quality experienced. used in routeCompare situations.
     Outputs:
       probability matrix: updated probability matrix
     """
+    probability_matrix = probability_matrix_list[ind]
+    flower_outcome_matrix = individual_flower_outcome[ind]
+
     if np.shape(probability_matrix) != np.shape(flower_outcome_matrix) : 
       raise ValueError ("probability_matrix and flower_outcome matrices of different lengths!")
 
     # Apply learning and abandon factor to flower outcomes
     nrow,ncol = np.shape(probability_matrix)
 
-    if not (bee_data["use_route_compare"][0]) : 
-
+    if not (bee_info["use_route_compare"][0]) : 
       # No route comparison, probe all values in the flower_outcome_matrix to input the changes in probabilities.
       factor_matrix = np.ones((nrow,ncol))
 
@@ -37,15 +40,15 @@ def apply_learning (route, probability_matrix,flower_outcome_matrix,bee_data,rou
         for col in range (ncol) : 
 
           if flower_outcome_matrix[row,col] == 1 :
-            factor_matrix[row,col] = bee_data["learning_factor"][0]
+            factor_matrix[row,col] = bee_info["learning_factor"][ind]
 
           if flower_outcome_matrix[row,col] == -1 :
-            factor_matrix[row,col] = bee_data["abandon_factor"][0]
+            factor_matrix[row,col] = bee_info["abandon_factor"][ind]
     else : 
       factor_matrix = np.ones((nrow,ncol))
 
       # Check if new route is better or equal
-      if (route_quality >= bee_data["best_route_quality"][0]) and (bee_data["number_of_resources_foraged"].equals(bee_data["crop_capacity"])) and (bee_data["best_route_quality"][0]>0) : ## /!\ Assuming crop capacity of 5.
+      if (route_quality >= bee_data[ind,3]) and (bee_data[ind,0]==bee_info["crop_capacity"][ind]) and (bee_data[ind,3]>=0) : 
 
         # Add all vectors of the route as a positive outcome
         number_of_flowers_in_route = len(route)
@@ -54,14 +57,14 @@ def apply_learning (route, probability_matrix,flower_outcome_matrix,bee_data,rou
 
           current_flower = route[i]
           next_flower = route[i+1]
-          factor_matrix[current_flower,next_flower] = bee_data["learning_factor"][0]
+          factor_matrix[current_flower,next_flower] = bee_info["learning_factor"][ind]
 
       # Indifferent to the route comparison, apply the abandon.
       for row in range (nrow): 
         for col in range (ncol) : 
 
           if flower_outcome_matrix[row,col] == -1 :
-            factor_matrix[row,col] = bee_data["abandon_factor"][0]
+            factor_matrix[row,col] = bee_info["abandon_factor"][ind]
 
     # Multiply the factor and the probability matrices element-wise and normalize it.
     probability_matrix = probability_matrix*factor_matrix
@@ -155,8 +158,6 @@ def online_learning(cost_of_flying,array_geometry,use_Q_learning,learning_array,
       reward  = reward - matrix_of_pairwise_distances[state,action]/max_distance_between_flowers
     learning_array = apply_online_Q_learning(learning_array,state,action,reward,alpha_pos,alpha_neg,gamma)
   else : 
-    if reward == 0 :
-      reward = -1
     learning_array = apply_online_learning(learning_array,state,action,reward,learning_factor,abandon_factor)
 
   return(learning_array)

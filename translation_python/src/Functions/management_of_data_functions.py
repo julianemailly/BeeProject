@@ -37,7 +37,6 @@ def initialize_probability_matrix_list(array_geometry,dist_factor,number_of_bees
 
   return (initial_probability_matrix_list)
 
-
 def initialize_Q_table_list (initialize_Q_table, array_geometry, dist_factor, number_of_bees,allow_nest_return_list) : 
   """
   Description: 
@@ -46,7 +45,6 @@ def initialize_Q_table_list (initialize_Q_table, array_geometry, dist_factor, nu
     initialize_Q_table: string, rule for initialization of Q matrix
     array_geometry: pandas dataframe of size 4*number_of_flowers : flower ID, x, y, patch ID
     dist_factor: float, parameter to estimate the probability of going from a flower to another
-    bee_data: pandas dataframe containing information about bees that will be changed throughout the simulation.
     allow_nest_return_list: list of allow_nest_return parameter for each bee
   Outputs: 
     List of Q tables
@@ -68,58 +66,45 @@ def initialize_Q_table_list (initialize_Q_table, array_geometry, dist_factor, nu
     return(Q_list)
 
 
-def initialize_bee_data(number_of_bees,param_tracking,param_indiv) : 
+def initialize_bee_data(number_of_bees) : 
   """
   Description: 
-    Sets up a data frame including all important informations on the foraging bees.
+    Sets up a matrix of data that will be updated during the simulation
   Inputs: 
     number_of_bees: integer, number of bees
-    param_tracking: dictionnary with parameters that must be tracked 
-    param_indiv: dictionnary with parameters of the bees
   Outputs:
-    bee_data: pandas dataframe containing information about bees that will be changed throughout the simulation. nrows = number_of_bees, ncol = number of attributes of param_trancking+number of attributes of param_indiv+2
+    bee_data: matrix with number_of_bees rows and 3 columns: number_of_resources_foraged, bout_finished, distance_travelled
+      number_of_resources_foraged: number of resources foraged by the bee so far
+      bout_finished: 0/1 says if the bout is finished for this bee
+      distance_travelled: total distance travelled by the bee so far
+      best_route_quality: best_route_quality found so far
   """
-  for key in param_indiv : 
-    if not isinstance(param_indiv[key],list) :
-      param_indiv[key] = [param_indiv[key] for k in range (number_of_bees)] 
-    else : 
-      if len(param_indiv[key]) != number_of_bees : 
-        raise ValueError("Impossible to initialize dataframe of bee data because of parameter "+str(key)+" contains lists whose number of elements is different from the number of bees.\nPlease refer to parameter.py for a full description of the initialization of the parameters.")
 
-  for key in param_tracking : 
-    param_tracking[key] = [param_tracking[key] for k in range (number_of_bees)]  
-  dict_of_bee_data = {"ID": [bee for bee in range (number_of_bees)]}
-  dict_of_bee_data.update(param_tracking)
-  dict_of_bee_data.update(param_indiv)
-  bee_data = pd.DataFrame(dict_of_bee_data)
+  bee_data = np.zeros((number_of_bees,4))
   return(bee_data)
 
 
-def initialize_bee_info(number_of_bees,param_indiv,array_ID) :
+def initialize_bee_info(number_of_bees,parameters_dict) :
   """
   Description:
     Sets up a data frame of parameters of bees.
   Inputs:
     number_of_bees: integer, number of bees
-    param_indiv: dictionnary with parameters of the bees
+    parameters_dict: dictionnary with parameters of the bees
     array_ID: string with the ID of the array
   Outputs:
-    bee_info: pandas dataframe with information about bees that will be stored at the end. nrows = number_of_bees, ncol = number of attributes of param_indiv+2
+    bee_info: pandas dataframe with information about bees that will be stored at the end. nrows = number_of_bees, ncol = number of attributes of parameters_dict+2
   """
-  for key in param_indiv : 
-    if not isinstance(param_indiv[key],list) :
-      param_indiv[key] = [param_indiv[key] for k in range (number_of_bees)] 
+  for key in parameters_dict : 
+    if not isinstance(parameters_dict[key],list) :
+      parameters_dict[key] = [parameters_dict[key] for k in range (number_of_bees)] 
     else : 
-      if len(param_indiv[key]) != number_of_bees : 
+      if len(parameters_dict[key]) != number_of_bees : 
         raise ValueError("Impossible to initialize dataframe of bee info because of parameter "+str(key)+" contains lists whose number of elements is different from the number of bees.\nPlease refer to parameter.py for a full description of the initialization of the parameters")  
   dict_of_bee_info = {"ID": [bee for bee in range (number_of_bees)]}
-  dict_of_bee_info.update(param_indiv)
-  dict_of_bee_info.update({'array_ID':array_ID})
+  dict_of_bee_info.update(parameters_dict)
   bee_info = pd.DataFrame(dict_of_bee_info)
-  try : 
-    bee_info.drop(columns = ["best_route_quality"])
-  finally : 
-    return(bee_info)
+  return(bee_info)
 
 
 def reboot_bee_data(bee_data) : 
@@ -127,16 +112,14 @@ def reboot_bee_data(bee_data) :
   Description:
     Resets the parameters of beeData between bouts.
   Inputs:
-    bee_data: pandas datafram containing relevant information about the bees
+    bee_data: numpy matrix containing relevant information about the bees
   Outputs:
-    The updated bee_data dataframe
+    The updated bee_data matrix
   """
-  number_of_bees = len(bee_data["ID"])
-  for ind in range (number_of_bees) : 
+  bee_data[:,0] = 0.
+  bee_data[:,1] = 0.
+  bee_data[:,2] = 0. 
 
-    bee_data.loc[ind,"number_of_resources_foraged"] = 0
-    bee_data.loc[ind,"bout_finished"] = False
-    bee_data.loc[ind,"distance_travelled"] = 0.
 
 def make_arrays_and_output_folders(silent_sim) : 
   """
@@ -162,6 +145,7 @@ def make_arrays_and_output_folders(silent_sim) :
   except :
     if not silent_sim : 
       print("Arrays folder already existing.")
+
 
 def get_value_of_parameter_in_current_test(name_of_parameter,list_of_names_of_parameters,parameter_values): 
   """
@@ -229,51 +213,30 @@ def initialize_data_of_current_test(list_of_names_of_parameters,parameter_values
   os.mkdir(output_folder_of_test)
 
   # Complete list of individual parameters. These are initialized with parameters_loop
-  param_indiv = dict(zip(list_of_names_of_parameters,parameter_values))
+  parameters_dict = dict(zip(list_of_names_of_parameters,parameter_values))
 
-  # Parameters tracked during the simulation for each bees
-  param_tracking = {"number_of_resources_foraged": 0, "probability_of_winning" : 1/number_of_bees, "bout_finished" : False, "distance_travelled":0.}
+  # Initialize the parameter matrix for each bee
+  bee_data = initialize_bee_data(number_of_bees)
 
-  # Initialize the parameter dataframe for each bee
-  bee_data = initialize_bee_data(number_of_bees,param_tracking,param_indiv)
+  # Create a dataframe of information to be retrieve in further analyses and passed to the simulation functions (and remember what parameters were used).
+  bee_info = initialize_bee_info(number_of_bees,parameters_dict)
 
-  return(number_of_parameter_sets, use_Q_learning, initialize_Q_table, test_name, output_folder_of_test, param_indiv, param_tracking, bee_data)
-
-
+  return(number_of_parameter_sets, use_Q_learning, initialize_Q_table, test_name, output_folder_of_test, parameters_dict, bee_data,bee_info)
 
 
 
 
-def initialize_data_of_current_array(array_info, array_number, reuse_generated_arrays, current_working_directory, silent_sim, dist_factor, number_of_bees, bee_data,initialize_Q_table,param_indiv,output_folder_of_test):
+def initialize_data_of_current_array(array_info, array_number, reuse_generated_arrays, current_working_directory, silent_sim, dist_factor, number_of_bees, bee_data,bee_info,initialize_Q_table,parameters_dict,output_folder_of_test):
   # Generate array
   array_geometry, array_info, array_folder = environment_generation_functions.create_environment(array_info, array_number, reuse_generated_arrays, current_working_directory, silent_sim)
-
-  # Initialize the list of probability matrices (always useful to assess optimal route quality)
-  if not silent_sim :
-    print("Initializing probability matrices.")
-  initial_probability_matrix_list = initialize_probability_matrix_list(array_geometry,dist_factor,number_of_bees,bee_data["allow_nest_return"])
-
-  # Save a copy of the initial probability matrix
-  path = array_folder + "\\probability_matrix.csv"
-  np.savetxt(path, initial_probability_matrix_list[0], delimiter=',')
-
-  # Initialize the list of Q-tables (maybe later will be used to assess optimal route quality)
-  if not silent_sim :
-    print("Initializing Q tables.")
-
-  initial_Q_table_list = initialize_Q_table_list (initialize_Q_table, array_geometry, dist_factor, number_of_bees,bee_data["allow_nest_return"])
-
-  # Save a copy of the initial Q table 
-  path = array_folder + "\\Q_table.csv"
-  np.savetxt(path, initial_Q_table_list[0], delimiter=',')
-
+  
   # Get maximum route quality of the array (simulating _ 1Ind for 30 each bouts to try and find the optimal route).
-  optimal_route_quality = optimal_route_assessment_functions.retrieve_optimal_route(array_info["array_ID"],array_geometry,bee_data,initial_probability_matrix_list,array_folder,silent_sim,0,number_of_bees=1)
+  optimal_route_quality_1_ind = optimal_route_assessment_functions.retrieve_optimal_route(array_info["array_ID"],array_geometry,bee_data,bee_info,array_folder,silent_sim,0,None,number_of_bees=1)
   if not silent_sim : 
-    print("Optimal route quality: "+str(optimal_route_quality))
+    print("Optimal route quality for 1 individual: "+str(optimal_route_quality_1_ind))
 
   # Get maximum route quality for 2 ind of the array (simulating _ 2Ind for 30 each bouts to try and find the optimal route).
-  optimal_route_quality_2_ind = optimal_route_assessment_functions.retrieve_optimal_route(array_info["array_ID"],array_geometry,bee_data,initial_probability_matrix_list,array_folder,silent_sim,0,number_of_bees=2)
+  optimal_route_quality_2_ind = optimal_route_assessment_functions.retrieve_optimal_route(array_info["array_ID"],array_geometry,bee_data,bee_info,array_folder,silent_sim,0,0,number_of_bees=2)
   if not silent_sim : 
     print("Optimal route quality for 2 individuals: "+str(optimal_route_quality_2_ind))
 
@@ -284,10 +247,6 @@ def initialize_data_of_current_array(array_info, array_number, reuse_generated_a
   output_folder_of_sim = output_folder_of_test + "\\Array"+"{:02d}".format(array_number)
   os.mkdir(output_folder_of_sim)
 
-  # Create a dataframe of information to be retrieve in further analyses (and remember what parameters were used).
-  bee_info = initialize_bee_info(number_of_bees,param_indiv,array_info["array_ID"])
-  pd.DataFrame(bee_info).to_csv(path_or_buf = output_folder_of_sim+'\\bee_info.csv', index = False)
-
   # Save array info and array geometry in this folder
   array_info_saved = copy.deepcopy(array_info)
   for key in array_info_saved : 
@@ -295,4 +254,7 @@ def initialize_data_of_current_array(array_info, array_number, reuse_generated_a
   pd.DataFrame(array_info_saved).to_csv(path_or_buf = output_folder_of_sim+'\\array_info.csv', index = False)
   array_geometry.to_csv(path_or_buf = output_folder_of_sim+'\\array_geometry.csv', index = False)
 
-  return(array_geometry, array_info, array_folder, initial_probability_matrix_list, initial_Q_table_list, optimal_route_quality, optimal_route_quality_2_ind, matrix_of_pairwise_distances, output_folder_of_sim, bee_info)
+  # Save bee_info
+  pd.DataFrame(bee_info).to_csv(path_or_buf = output_folder_of_sim+'\\bee_info.csv', index = False)
+
+  return(array_geometry, array_info, array_folder, optimal_route_quality_1_ind, optimal_route_quality_2_ind, matrix_of_pairwise_distances, output_folder_of_sim)

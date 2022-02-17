@@ -25,7 +25,7 @@ def character_match(str_list,chr_searched) :
     chr_matched = np.array([chr_searched in str_list[k] for k in range (len(str_list))])
     return(np.array(chr_matched))
 
-
+'''
 def find_character_position(str_list,chr_searched) : 
 	"""
 	Decription: 
@@ -58,3 +58,4 @@ def create_video_output(array_geometry, matrix_of_visitation_sequences,list_of_r
 	Outputs:
 	"""
 	return()
+'''

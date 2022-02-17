@@ -48,15 +48,15 @@ source("01-Functions.R")
 simulationToAnalyse = "/Output";
 
 # Simulation specifications
-numberOfArrays = 10;
-numberOfSimulations = 100;
-numberOfBouts = 50;
+numberOfArrays = 1;
+numberOfSimulations = 200;
+numberOfBouts = 30;
 numberOfBees = 2;
 # numberOfResources = 10;
 
 arrayOfTest = c("plos")
 
-overwriteFiles = FALSE;
+overwriteFiles = TRUE;
 
 makeFilm = FALSE; # Create a 2D density plot for each array and all arrays combined
 
@@ -73,12 +73,6 @@ testFolders = list.files(path=outputDirectory);
 # By default we retrieve files that contain the "generate" word. 
 testFolders = testFolders[CharacterMatch(testFolders,"generate")];
 
-# testMatch = rep(F,length(testFolders))
-# for(val in 1:length(arrayOfTest))
-# {
-#   testMatch[which(CharacterMatch(testFolders,arrayOfTest[val]))] = T
-# }
-# testFolders = testFolders[testMatch]
 
 if (length(testFolders)==0) {testFolders=c("")}
 
@@ -187,8 +181,9 @@ for(testNumber in 1:length(testFolders))
     arrayDirectory = paste(testFolderPath,test,sep="/");
     
     ## Retrieve the visitation sequence file
-    visitSeqData = read.csv(paste(arrayDirectory,"/matrixOfVisitationSequences.csv",sep=""));
-    
+    visitSeqData = read.csv(paste(arrayDirectory,"/matrixOfVisitationSequences.csv",sep=""))
+
+
     ## Create the new dataframe to output the differential quality
     competitionDF = data.frame(simulation = rep(1:numberOfSimulations,each=numberOfBouts),
                                bout = rep(1:numberOfBouts,times=numberOfSimulations),
@@ -424,8 +419,9 @@ for(testNumber in 1:length(testFolders))
     array = arrays[arrayNumber];
     arrayDirectory = paste(testFolderPath,array,sep="/");
     
-    visitationSequences = read.csv(paste(arrayDirectory,"/matrixOfVisitationSequences.csv",sep=""));
-    
+    visitationSequences = read.csv(paste(arrayDirectory,"/matrixOfVisitationSequences.csv",sep=""))
+
+ 
     for(sim in 1:numberOfSimulations)
     {
       simVisitationSequences = subset(visitationSequences,visitationSequences[,1]==sim);
@@ -531,7 +527,7 @@ for(testNumber in 1:length(testFolders))
   for(arrayNumber in 1:length(arrayFiles))
   {
     arrayName = paste(arrayType,sprintf("%02d",arrayNumber),sep="_");
-    
+
     arrayFolder = paste(getwd(),"/Arrays/",arrayName,sep="");
     
     optimalRoute2Ind = read.csv(paste(arrayFolder,"optimalRoute2Ind.csv",sep="/"));
@@ -681,6 +677,8 @@ for(testNumber in 1:length(testFolders))
     
     # Import the visitation sequences of this array
     matrixOfVisitationSequences = as.matrix(unname(read.csv(paste(arrayFolder,"/matrixOfVisitationSequences.csv",sep=""))))
+
+    
     
     for(sim in 1:numberOfSimulations)
     {
@@ -709,7 +707,7 @@ for(testNumber in 1:length(testFolders))
         {
           
           visitCount = flowerVisited[[bee]];
-          visitCount = visitCount[-which(visitCount$x==1 || visitCount$x==0),];
+          visitCount = visitCount[which(visitCount$x!=1 & visitCount$x!=0),];
           
           for(flower in visitCount$x)
           {
@@ -718,7 +716,9 @@ for(testNumber in 1:length(testFolders))
         }
         
         # H2 computation
-        output$H2[i] = H2fun(H2mat,H2_integer = T)[1];
+        H2_fun_result = H2fun(H2mat,H2_integer = T);
+        output$H2[i] = H2_fun_result[1];
+        if (is.nan(output$H2[i])) output$H2[i] = H2_fun_result[2] 
         
         # Qnorm computation
         output$Q[i] = DIRT_LPA_wb_plus(H2mat)$modularity
@@ -825,7 +825,7 @@ data["model"]=modelVector
 nArrayTypes=length(levels(as.factor(data$arrayType)))
 data=aggregate(data,list(data$arrayType,data$model,data$bout),mean)
 colnames(data)[2]="Model"
-ggplot(data = data,aes(x=bout, y=Q,group=Model,color=Model)) +
+ggplot(data = data,aes(x=bout, y=groupQuality,group=Model,color=Model)) +
   geom_line()+
   facet_wrap(~Group.1)+
   ylim(0,1)

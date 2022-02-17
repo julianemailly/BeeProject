@@ -45,7 +45,7 @@ def create_array_ID(array_info,array_number) :
     flowers_per_patch_string = 'None'
   else : 
     flowers_per_patch_string = ''.join(map(str,array_info['flowers_per_patch']))
-  array_ID = "Array-" + str(array_info["number_of_flowers"]) + str(array_info["number_of_patches"]) + "-" + str(array_info["patchiness_index"]) + "-" + flowers_per_patch_string + "-" + str(array_info["environment_size"]) + "_" + "{:02d}".format(array_number)
+  array_ID = "Array-" + str(array_info["number_of_flowers"]) + "-"+ str(array_info["number_of_patches"]) + "-" + str(array_info["patchiness_index"]) + "-" + flowers_per_patch_string + "-" + str(array_info["environment_size"]) + "_" + "{:02d}".format(array_number)
   return(array_ID)
 
 
@@ -326,7 +326,8 @@ def create_environment (array_info, array_number, reuse_generated_arrays,current
       print("Loading known array : " + array_info['environment_type']+"\n")
     array_folder = current_working_directory+"\\Arrays\\"+array_info["environment_type"]
     array_geometry = load_and_normalize_array_geometry(array_folder+"\\array_geometry.csv")
-    array_info = pd.read_csv(array_folder+"\\array_info.csv").to_dict()
+    array_info = pd.read_csv(array_folder+"\\array_info.csv").to_dict(orient='list')
+    for key in array_info : 
+      array_info[key] = array_info[key][0]
     array_info['array_ID'] = array_info['environment_type']
-
   return(array_geometry, array_info, array_folder)

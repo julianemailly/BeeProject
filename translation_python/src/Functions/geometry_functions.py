@@ -32,8 +32,12 @@ def normalize_matrix_by_row (matrix) :
 	Outputs: 
 		normalized_matrix: the matrix normalized
 	"""
-	row_sums = matrix.sum(axis=1)
-	normalized_matrix = matrix / row_sums[:, np.newaxis]
+	nrow,ncol = np.shape(matrix)
+	normalized_matrix = np.empty((nrow,ncol))
+	for row in range (nrow) : 
+		row_sum  = np.sum(matrix[row,:])
+		if row_sum !=0 : 
+			normalized_matrix[row,:]=matrix[row,:]/row_sum
 	return(normalized_matrix)
 
 
@@ -100,12 +104,12 @@ def give_probability_of_vector_with_dist_factor(x,dist_factor) :
   return (probabilities)
 
 
-def compute_route_quality(flowers_per_patch_foraged,route_length) : 
+def compute_route_quality(number_of_flowers_foraged,route_length) : 
 	"""
 	Description:
 		Route quality evaluation function
 	Inputs:
-		flowers_per_patch_foraged: number of flowers collected
+		number_of_flowers_foraged: number of flowers collected
 		route_length: distance covered by the bee
 	Outputs:
 		Route quality (float)
@@ -113,7 +117,7 @@ def compute_route_quality(flowers_per_patch_foraged,route_length) :
 	if route_length == 0 :
 		return(0)
 	else :
-		return(flowers_per_patch_foraged**2/route_length)
+		return(number_of_flowers_foraged**2/route_length)
 
 
 def get_quality_of_route(route,array_geometry,list_of_resources_foraged) : 
@@ -148,8 +152,7 @@ def formatting_route(route):
 	route=np.array(route)
 	route_length = len(route)
 	i = route_length - 1
-	while i!=0 and route[i] == 0:
+	while i!=0 and route[i] == -1:
 		route = np.delete(route,i)
 		i=i-1
-	route = np.concatenate((route,[0]))
 	return(route)
