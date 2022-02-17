@@ -106,6 +106,10 @@ def initialize_bee_info(number_of_bees,parameters_dict) :
   bee_info = pd.DataFrame(dict_of_bee_info)
   return(bee_info)
 
+def add_array_ID_to_bee_info(bee_info, array_ID,number_of_bees) :
+  bee_info["array_ID"] = [array_ID for k in range (number_of_bees)]
+  return()
+
 
 def reboot_bee_data(bee_data) : 
   """
@@ -230,31 +234,32 @@ def initialize_data_of_current_array(array_info, array_number, reuse_generated_a
   # Generate array
   array_geometry, array_info, array_folder = environment_generation_functions.create_environment(array_info, array_number, reuse_generated_arrays, current_working_directory, silent_sim)
   
+  # Initialize learning array list
+  use_Q_learning = bee_info["use_Q_learning"][0]
+  if use_Q_learning : 
+    initial_learning_array_list = initialize_Q_table_list (bee_info["initialize_Q_table"][0], array_geometry, bee_info["dist_factor"][0], number_of_bees,bee_info["allow_nest_return"])
+  else : 
+    initial_learning_array_list = initialize_probability_matrix_list(array_geometry, bee_info["dist_factor"][0], number_of_bees,bee_info["allow_nest_return"])
+
+
+  # Add array_ID to bee_info
+  add_array_ID_to_bee_info(bee_info, array_info["array_ID"],number_of_bees)
+
   # Get maximum route quality of the array (simulating _ 1Ind for 30 each bouts to try and find the optimal route).
-  optimal_route_quality_1_ind = optimal_route_assessment_functions.retrieve_optimal_route(array_info["array_ID"],array_geometry,bee_data,bee_info,array_folder,silent_sim,0,None,number_of_bees=1)
+  optimal_route_quality_1_ind = optimal_route_assessment_functions.retrieve_optimal_route(array_geometry,bee_data,bee_info,array_folder,silent_sim,0,None,number_of_bees=1)
   if not silent_sim : 
     print("Optimal route quality for 1 individual: "+str(optimal_route_quality_1_ind))
 
   # Get maximum route quality for 2 ind of the array (simulating _ 2Ind for 30 each bouts to try and find the optimal route).
-  optimal_route_quality_2_ind = optimal_route_assessment_functions.retrieve_optimal_route(array_info["array_ID"],array_geometry,bee_data,bee_info,array_folder,silent_sim,0,0,number_of_bees=2)
+  optimal_route_quality_2_ind = optimal_route_assessment_functions.retrieve_optimal_route(array_geometry,bee_data,bee_info,array_folder,silent_sim,0,0,number_of_bees=2)
   if not silent_sim : 
     print("Optimal route quality for 2 individuals: "+str(optimal_route_quality_2_ind))
-
-  # Initialize distance matrix
-  matrix_of_pairwise_distances = geometry_functions.get_matrix_of_distances_between_flowers(array_geometry)
 
   # Create an Array folder for the current array in the Output folder
   output_folder_of_sim = output_folder_of_test + "\\Array"+"{:02d}".format(array_number)
   os.mkdir(output_folder_of_sim)
 
-  # Save array info and array geometry in this folder
-  array_info_saved = copy.deepcopy(array_info)
-  for key in array_info_saved : 
-    array_info_saved[key] = [array_info_saved[key]]
-  pd.DataFrame(array_info_saved).to_csv(path_or_buf = output_folder_of_sim+'\\array_info.csv', index = False)
-  array_geometry.to_csv(path_or_buf = output_folder_of_sim+'\\array_geometry.csv', index = False)
-
   # Save bee_info
   pd.DataFrame(bee_info).to_csv(path_or_buf = output_folder_of_sim+'\\bee_info.csv', index = False)
 
-  return(array_geometry, array_info, array_folder, optimal_route_quality_1_ind, optimal_route_quality_2_ind, matrix_of_pairwise_distances, output_folder_of_sim)
+  return(array_geometry, array_info, array_folder, optimal_route_quality_1_ind, optimal_route_quality_2_ind, output_folder_of_sim,initial_learning_array_list)

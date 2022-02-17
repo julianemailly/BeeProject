@@ -59,7 +59,7 @@ def get_probabilities_of_choosing_flowers(use_Q_learning,learning_array_list,ind
   """  
   if not use_Q_learning : 
     probabilities = learning_array_list[ind][current_pos,destination_is_available]
-    sum_of_probabilities = np.sum(learning_array_list[ind][current_pos,destination_is_available])
+    sum_of_probabilities = np.sum(probabilities)
     if sum_of_probabilities !=0 : 
       probabilities = probabilities/sum_of_probabilities
   else : 

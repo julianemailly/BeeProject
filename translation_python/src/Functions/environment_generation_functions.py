@@ -311,12 +311,11 @@ def create_environment (array_info, array_number, reuse_generated_arrays,current
 
       # Write the array and parameters
       array_info_saved = copy.deepcopy(array_info)
-      
       if array_info_saved['flowers_per_patch'] is not None : 
         array_info_saved['flowers_per_patch'] =''.join(map(str,array_info_saved['flowers_per_patch']))
-      
       for key in array_info_saved : 
         array_info_saved[key] = [array_info_saved[key]]
+        
       pd.DataFrame(array_info_saved).to_csv(path_or_buf = array_folder + '\\array_info.csv', index = False)
       array_geometry.to_csv(path_or_buf = array_folder + "\\array_geometry.csv", index = False)
 

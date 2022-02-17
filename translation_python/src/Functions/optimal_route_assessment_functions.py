@@ -37,13 +37,12 @@ def reformatting_best_route_sim(best_route_sim,number_of_simulations):
   return(best_route_sim_array)
 
 
-def optimal_route_assessment(array,array_geometry,bee_data,bee_info,array_folder,silent_sim,optimal_route_quality_1_ind,optimal_route_quality_2_ind,number_of_bees) : 
+def optimal_route_assessment(array_geometry,bee_data,bee_info,array_folder,silent_sim,optimal_route_quality_1_ind,optimal_route_quality_2_ind,number_of_bees) : 
   """
   Description:
     Makes an assessment of the optimal route quality of an array by releasing 100 bees for 30 bout each. Retrieves the best route quality.
     This is an approximation of the solution of the travelling salesman problem.
   Inputs:
-    array: str, name of the array
     array_geometry: pandas dataframe of size 4*number_of_flowers : flower ID, x, y, patch ID
     bbee_data: numpy array of relvant data about the bees that will be updated during the simulation
     bee_info: pandas dataframe of the parameters 
@@ -77,9 +76,11 @@ def optimal_route_assessment(array,array_geometry,bee_data,bee_info,array_folder
     best_qual_for_all_sim = 0 # best route quality so far, will be updated at the end of each simulation
     number_of_sim_having_the_best_qual = 1 # number of bouts having the best quality
 
+    initial_probability_matrix_list = management_of_data_functions.initialize_probability_matrix_list(array_geometry,bee_info["dist_factor"][0],number_of_bees,bee_info["allow_nest_return"])
+
     for sim in range (number_of_simulations) : 
 
-      probability_array_list = management_of_data_functions.initialize_probability_matrix_list(array_geometry,bee_info["dist_factor"][0],number_of_bees,bee_info["allow_nest_return"])
+      probability_array_list = copy.deepcopy(initialize_probability_matrix_list)
 
       best_qual_for_this_sim = 0
 
@@ -109,7 +110,7 @@ def optimal_route_assessment(array,array_geometry,bee_data,bee_info,array_folder
     proportion_of_sim_with_opt_qual = 100* number_of_sim_having_the_best_qual / number_of_simulations
 
     if not silent_sim : 
-      print("Out of "+str(number_of_simulations)+" simulations in "+str(array)+", "+str(proportion_of_sim_with_opt_qual)+"% reached the maximum quality of "+str(best_qual_for_all_sim)+". Setting this value as optimal route quality.")
+      print("Out of "+str(number_of_simulations)+" simulations, "+str(proportion_of_sim_with_opt_qual)+"% reached the maximum quality of "+str(best_qual_for_all_sim)+". Setting this value as optimal route quality.")
 
     # Do not forget to put back the original use_Q_learning and use_online_reinforcement paramters in bee_data: 
     bee_info.loc[:, "use_Q_learning"] = saved_use_Q_learning
@@ -121,12 +122,11 @@ def optimal_route_assessment(array,array_geometry,bee_data,bee_info,array_folder
 
 
 
-def retrieve_optimal_route(array,array_geometry,bee_data,bee_info,array_folder,silent_sim,optimal_route_quality_1_ind,optimal_route_quality_2_ind,number_of_bees) : 
+def retrieve_optimal_route(array_geometry,bee_data,bee_info,array_folder,silent_sim,optimal_route_quality_1_ind,optimal_route_quality_2_ind,number_of_bees) : 
   """
   Description:
     Attempts to retrieve an existing optimal route file for the array tested. Otherwise, calls optimal_route_assessment.
   Inputs:
-    array: str, name of the array
     array_geometry: pandas dataframe of size 4*number_of_flowers : flower ID, x, y, patch ID
     bee_data: numpy array of relvant data about the bees that will be updated during the simulation
     bee_info: pandas dataframe of the parameters 
@@ -156,7 +156,7 @@ def retrieve_optimal_route(array,array_geometry,bee_data,bee_info,array_folder,s
     # If not found in the memory, assess the optimal route quality
     if not silent_sim : 
       print("No data on optimal route for "+str(number_of_bees)+" individuals found. Assessing optimal route with simulations.")
-    optimal_route = optimal_route_assessment(array,array_geometry,bee_data,bee_info,array_folder,silent_sim,optimal_route_quality_1_ind,optimal_route_quality_2_ind,number_of_bees)
+    optimal_route = optimal_route_assessment(array_geometry,bee_data,bee_info,array_folder,silent_sim,optimal_route_quality_1_ind,optimal_route_quality_2_ind,number_of_bees)
     # save it in a file
     pd.DataFrame({"optimal_route":[optimal_route]}).to_csv(path_or_buf = array_folder+'\\optimal_route_'+str(number_of_bees)+'_ind.csv', index = False)
 

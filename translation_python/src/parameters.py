@@ -59,14 +59,14 @@ These parameters can only take a single value (not a list).
 '''
 
 # Simulation parameters
-number_of_simulations = 200 # Number of simulations for each set of parameter.
+number_of_simulations = 100 # Number of simulations for each set of parameter.
 number_of_bouts = 30 # Number of bouts in each simulation.
 number_of_bees = 2 # Number of bees moving simultaneously in the environment.
 dist_factor = 2 # This variable contains the power at which the distance is taken in the [probability = 1/d^distFactor] function to estimate movement probabilities when not use_Q_learning or if initialize_Q_table = "distance".
 
 # Technical parameters
 silent_sim = False  # If False, provides comments in the Console on the progression of the simulation.
-sensitivity_analysis = True # If True, computes the absolute difference between successive learning arrays for each bee
+sensitivity_analysis = False # If True, computes the absolute difference between successive learning arrays for each bee
 video_output = False # If  True, outputs videos showing the bee movements during simulation. NOT IMPLEMENTED YET.
 
 

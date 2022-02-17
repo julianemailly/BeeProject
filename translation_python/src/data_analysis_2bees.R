@@ -47,16 +47,11 @@ source("01-Functions.R")
 # Parameters --------------------------------------------------------------
 
 
-
-# Specify the folder & path associated. getwd() returns already the path until the root. Only specify the path from the root.
-simulationToAnalyse = "/Output";
-
 # Simulation specifications
 numberOfArrays = 1;
-numberOfSimulations = 200;
+numberOfSimulations = 100;
 numberOfBouts = 30;
 numberOfBees = 2;
-# numberOfResources = 10;
 
 arrayOfTest = c("generate")
 
@@ -72,17 +67,13 @@ stopAfterTrapline = F;
 # Root Code (Run before any part) -----------------------------------------
 
 # Get to the specified path and retrieve the file in this folder.
-outputDirectory = paste(getwd(),simulationToAnalyse,sep="");
+currentDirectory = getwd()
+outputDirectory = paste(currentDirectory,"/Output",sep="");
+arraysDirectory = paste(currentDirectory,"/Arrays",sep="");
 testFolders = list.files(path=outputDirectory);
 # By default we retrieve files that contain the "generate" word. 
 testFolders = testFolders[CharacterMatch(testFolders,"generate")];
 
-# testMatch = rep(F,length(testFolders))
-# for(val in 1:length(arrayOfTest))
-# {
-#   testMatch[which(CharacterMatch(testFolders,arrayOfTest[val]))] = T
-# }
-# testFolders = testFolders[testMatch]
 
 if (length(testFolders)==0) {testFolders=c("")}
 
@@ -95,20 +86,10 @@ abandonFactors = c();
 routeCompares = c();
 for(fld in testFolders)
 {
-  if (fld=="") {
-    arrayInfos = read.csv(paste(outputDirectory,"/",fld,"Array00/array_info.csv",sep=""))
-    beeInfos = read.csv(paste(outputDirectory,"/",fld,"Array00/bee_info.csv",sep=""))
-    learningFactors = c(learningFactors,beeInfos$learning_factor[1]);
-    abandonFactors = c(abandonFactors,beeInfos$abandon_factor[1]);
-    if(beeInfos$use_route_compare[1]) routeCompares = c(routeCompares,"routeCompare") else routeCompares = c(routeCompares,"noRouteCompare");
-    
-    arrayNameChr = paste("R",arrayInfos$number_of_flowers,"-P",arrayInfos$number_of_patches,sep="")
-    
-    if(!is.na(arrayInfos$flowers_per_patch)) {arrayNameChr = paste(arrayNameChr,"-",arrayInfos$flowers_per_patch,sep="")}
-    
-    arrayTypesOnData = c(arrayTypesOnData,arrayNameChr)
-  }else{  
-  arrayInfos = read.csv(paste(outputDirectory,"/",fld,"/Array00/array_info.csv",sep=""))
+  beeInfos = read.csv(paste(outputDirectory,"/",fld,"/Array00/bee_info.csv",sep=""))
+  arrayID = beeInfos[1,"array_ID"];
+  arrayFolder = paste(arraysDirectory,"/",arrayID,sep="");
+  arrayInfos = read.csv(paste(arrayFolder,"/array_info.csv",sep=""))
   beeInfos = read.csv(paste(outputDirectory,"/",fld,"/Array00/bee_info.csv",sep=""))
   learningFactors = c(learningFactors,beeInfos$learning_facto[1]);
   abandonFactors = c(abandonFactors,beeInfos$abandon_factor[1]);
@@ -118,7 +99,7 @@ for(fld in testFolders)
   
   if(!is.na(arrayInfos$flowers_per_patch)) {arrayNameChr = paste(arrayNameChr,"-",arrayInfos$flowers_per_patch,sep="")}
   
-  arrayTypesOnData = c(arrayTypesOnData,arrayNameChr)}
+  arrayTypesOnData = c(arrayTypesOnData,arrayNameChr)
   
 }
 
@@ -170,8 +151,7 @@ for(testNumber in 1:length(testFolders))
   
   ## Retrieve the informations about the simulation
   beeInfos = read.csv(paste(testFolderPath,"/Array00/bee_info.csv",sep=""));
-  arrayInfos = read.csv(paste(testFolderPath,"/Array00/array_info.csv",sep=""));
-  arrayType = arrayInfos$array_ID[1];
+  arrayType = beeInfos$array_ID[1];
   
   ## Create a dataframe that contains all quality values of all arrays
   lengthOfDF = numberOfArrays*numberOfSimulations*numberOfBouts;
@@ -481,7 +461,9 @@ for(testNumber in 1:length(testFolders))
   subSeqSim = read.csv(paste(fileDirectory,"/similarity_data.csv",sep=""));
   
   beeInfos = read.csv(paste(fileDirectory,"/Array00/bee_info.csv",sep=""))
-  arrayInfos = read.csv(paste(fileDirectory,"/Array00/array_info.csv",sep=""))
+  arrayID = beeInfos[1,"array_ID"];
+  arrayFolder = paste(arraysDirectory,"/",arrayID,sep="");
+  arrayInfos = read.csv(paste(arrayFolder,"/array_info.csv",sep=""))
   arrayType = paste("R",arrayInfos$number_of_flowers,"-P",arrayInfos$number_of_patches,sep="")
   
   extractSimilarity = subSeqSim$similarityIndex
@@ -525,9 +507,9 @@ for(testNumber in 1:length(testFolders))
   cat("Starting group quality assessment for test : ",testFolderName,".\n",sep="");
   
   beeInfos = read.csv(paste(testFolderPath,"/Array00/bee_info.csv",sep=""));
-  arrayInfos = read.csv(paste(testFolderPath,"/Array00/array_info.csv",sep=""))
-  arrayType = paste("R",arrayInfos$numberOfResources,"-P",arrayInfos$number_of_patches,sep="")
-  arrayType = arrayInfos$array_ID[1]
+  arrayType = beeInfos[1,"array_ID"];
+  arrayFolder = paste(arraysDirectory,"/",arrayType,sep="");
+  arrayInfos = read.csv(paste(arrayFolder,"/array_info.csv",sep=""))
   n=nchar(arrayType)
   arrayType=substring(arrayType,1,n-3)
   
@@ -577,7 +559,7 @@ for(testNumber in 1:length(testFolders))
       routeQualityData$QallRelative = routeQualityData$Qall/optimalQuality2Ind;
       
       write.csv(routeQualityData,paste(qualityFolder,"/route_quality_data.csv",sep=""),row.names=F);
-      #file.remove(paste(qualityFolder,"/route_quality_DF.csv",sep=""))
+      file.remove(paste(qualityFolder,"/route_quality_DF.csv",sep=""))
     }
     routeQualityData = read.csv(paste(qualityFolder,"/route_quality_data.csv",sep=""))
     
@@ -685,9 +667,10 @@ for(testNumber in 1:length(testFolders))
   for(arrayNumber in 1:numberOfArrays)
   {
     arrayFolder = paste(testFolderPath,"/Array",sprintf("%02d",arrayNumber-1),sep="");
-    
-    bla = read.csv(paste(arrayFolder,"/array_info.csv",sep=""))
-    numberOfResources = bla$number_of_flowers;
+    beeInfos = read.csv(paste(testFolderPath,"/Array00/bee_info.csv",sep=""));
+    arrayID = beeInfos[1,"array_ID"];
+    arrayInfos = read.csv(paste(arraysDirectory,"/",arrayID,"/array_info.csv",sep=""))
+    numberOfResources = arrayInfos$number_of_flowers;
     
     # Import the visitation sequences of this array
 

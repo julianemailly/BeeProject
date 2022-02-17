@@ -34,7 +34,7 @@ def get_list_of_parameters_names(parameters_loop):
 
 
 
-def simulation_loop(number_of_simulations,number_of_bouts,number_of_bees,optimal_route_quality_1_ind,optimal_route_quality_2_ind,bee_data,bee_info,array_geometry,silent_sim,array_folder,output_folder_of_sim,use_Q_learning,sensitivity_analysis,matrix_of_pairwise_distances):
+def simulation_loop(initial_learning_array_list,number_of_simulations,number_of_bouts,number_of_bees,optimal_route_quality_1_ind,optimal_route_quality_2_ind,bee_data,bee_info,array_geometry,silent_sim,array_folder,output_folder_of_sim,use_Q_learning,sensitivity_analysis):
 
   '''
   Description:
@@ -50,7 +50,6 @@ def simulation_loop(number_of_simulations,number_of_bouts,number_of_bees,optimal
     use_Q_learning: if True, use the Q-Learning algorithm instead of T. Dubois's
     initial_Q_table_list,initial_probability_matrix_list,
     sensitivity_analysis: if True, performs sensitivitya analysis
-    matrix_of_pairwise_distances: matrix of distances between flowers
   Outputs:
     updated optimal_route_quality
   '''
@@ -72,10 +71,8 @@ def simulation_loop(number_of_simulations,number_of_bouts,number_of_bees,optimal
     dist_factor = bee_info["dist_factor"][0]
     initialize_Q_table = bee_info["initialize_Q_table"][0]
     allow_nest_return_list = bee_info["allow_nest_return"]
-    if use_Q_learning : 
-      learning_array_list = management_of_data_functions.initialize_Q_table_list (initialize_Q_table, array_geometry, dist_factor, number_of_bees, allow_nest_return_list)
-    else : 
-      learning_array_list = management_of_data_functions.initialize_probability_matrix_list(array_geometry,dist_factor,number_of_bees,allow_nest_return_list)
+
+    learning_array_list = copy.deepcopy(initial_learning_array_list)
 
     # Bout loop
     for bout in range (number_of_bouts) :
@@ -145,18 +142,9 @@ def simulation_loop(number_of_simulations,number_of_bouts,number_of_bees,optimal
 
   np.savetxt(output_folder_of_sim+"\\matrix_of_visitation_sequences.csv",matrix_of_visitation_sequences, delimiter=',',fmt='%i')
 
-  # Compute absolute route quality
-  relative_route_quality =np.reshape(matrix_of_bee_data[:,-1],(number_of_simulations*number_of_bouts*number_of_bees,1))
-  if optimal_route_quality_1_ind != 0 :
-    relative_route_quality = relative_route_quality/optimal_route_quality_1_ind
-  matrix_of_bee_data = np.concatenate((matrix_of_bee_data,relative_route_quality),axis=1)
-
-  route_quality_dataframe = pd.DataFrame(matrix_of_bee_data,columns=["simulation","bout","bee","distance_with_previous_learning_array","number_of_resources_foraged","absolute_quality","relative_quality"])
+  route_quality_dataframe = pd.DataFrame(matrix_of_bee_data,columns=["simulation","bout","bee","distance_with_previous_learning_array","number_of_resources_foraged","absolute_quality"])
   
   route_quality_dataframe.to_csv(path_or_buf = output_folder_of_sim+'\\route_quality_DF.csv', index = False)
-
-  # Save matrix of distances
-  np.savetxt(output_folder_of_sim+'\\matrix_of_distances.csv',matrix_of_pairwise_distances,delimiter=',')
 
   if not silent_sim : 
     print("Simulations ended for the current test.\n")
@@ -212,8 +200,8 @@ def simulation(current_working_directory,experiment_name,array_info,number_of_ar
 
     for array_number in range (number_of_arrays): 
 
-      array_geometry, array_info, array_folder, optimal_route_quality_1_ind, optimal_route_quality_2_ind, matrix_of_pairwise_distances, output_folder_of_sim = management_of_data_functions.initialize_data_of_current_array(array_info, array_number, reuse_generated_arrays, current_working_directory, silent_sim, dist_factor, number_of_bees, bee_data,bee_info,initialize_Q_table,parameters_dict,output_folder_of_test)
-      optimal_route_quality_1_ind,optimal_route_quality_2_ind = simulation_loop(number_of_simulations,number_of_bouts,number_of_bees,optimal_route_quality_1_ind, optimal_route_quality_2_ind,bee_data,bee_info,array_geometry,silent_sim,array_folder,output_folder_of_sim,use_Q_learning,sensitivity_analysis,matrix_of_pairwise_distances)
+      array_geometry, array_info, array_folder, optimal_route_quality_1_ind, optimal_route_quality_2_ind, output_folder_of_sim,initial_learning_array_list = management_of_data_functions.initialize_data_of_current_array(array_info, array_number, reuse_generated_arrays, current_working_directory, silent_sim, dist_factor, number_of_bees, bee_data,bee_info,initialize_Q_table,parameters_dict,output_folder_of_test)
+      optimal_route_quality_1_ind,optimal_route_quality_2_ind = simulation_loop(initial_learning_array_list,number_of_simulations,number_of_bouts,number_of_bees,optimal_route_quality_1_ind, optimal_route_quality_2_ind,bee_data,bee_info,array_geometry,silent_sim,array_folder,output_folder_of_sim,use_Q_learning,sensitivity_analysis)
 
 
     # Video output: not developed yet  ---------------------------------------------------------------------------------------------------------
