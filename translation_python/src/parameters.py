@@ -59,8 +59,8 @@ These parameters can only take a single value (not a list).
 '''
 
 # Simulation parameters
-number_of_simulations = 100 # Number of simulations for each set of parameter.
-number_of_bouts = 30 # Number of bouts in each simulation.
+number_of_simulations = 1 # Number of simulations for each set of parameter.
+number_of_bouts = 1 # Number of bouts in each simulation.
 number_of_bees = 2 # Number of bees moving simultaneously in the environment.
 dist_factor = 2 # This variable contains the power at which the distance is taken in the [probability = 1/d^distFactor] function to estimate movement probabilities when not use_Q_learning or if initialize_Q_table = "distance".
 

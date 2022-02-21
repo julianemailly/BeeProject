@@ -62,6 +62,7 @@ def get_matrix_of_distances_between_flowers(array_geometry) :
 	Outputs: 
 		matrix_of_pairwise_distances: matrix of size number_of_flowers*number_of_flowers gibing the euclidean distance between pairs of flowers
 	"""
+	print("get matrix of distances")
 	matrix_of_coordinates = array_geometry[["x","y"]] # keep the coordinates
 	matrix_of_pairwise_distances = euclidean_distances (matrix_of_coordinates,matrix_of_coordinates)
 	return(matrix_of_pairwise_distances)

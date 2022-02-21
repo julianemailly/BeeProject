@@ -35,7 +35,7 @@ def initialize_probability_matrix_list(array_geometry,dist_factor,number_of_bees
       initial_probability_matrix_list[ind][:,0] = 0
       initial_probability_matrix_list[ind] = geometry_functions.normalize_matrix_by_row(initial_probability_matrix_list[ind])
 
-  return (initial_probability_matrix_list)
+  return (np.array(initial_probability_matrix_list))
 
 def initialize_Q_table_list (initialize_Q_table, array_geometry, dist_factor, number_of_bees,allow_nest_return_list) : 
   """
@@ -63,7 +63,7 @@ def initialize_Q_table_list (initialize_Q_table, array_geometry, dist_factor, nu
     for bee in range (number_of_bees) :
       Q_list[bee] = Q_list[bee] + 0.1*np.random.normal(loc=0,scale=1, size=(number_of_states,number_of_states))
       
-    return(Q_list)
+    return(np.array(Q_list))
 
 
 def initialize_bee_data(number_of_bees) : 
@@ -233,7 +233,7 @@ def initialize_data_of_current_test(list_of_names_of_parameters,parameter_values
 def initialize_data_of_current_array(array_info, array_number, reuse_generated_arrays, current_working_directory, silent_sim, dist_factor, number_of_bees, bee_data,bee_info,initialize_Q_table,parameters_dict,output_folder_of_test):
   # Generate array
   array_geometry, array_info, array_folder = environment_generation_functions.create_environment(array_info, array_number, reuse_generated_arrays, current_working_directory, silent_sim)
-  
+
   # Initialize learning array list
   use_Q_learning = bee_info["use_Q_learning"][0]
   if use_Q_learning : 

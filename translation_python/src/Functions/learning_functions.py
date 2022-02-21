@@ -90,7 +90,7 @@ def softmax(values_vector,beta) :
       return(np.exp(beta*values_vector)/np.sum(np.exp(beta*values_vector)))
 
 
-def apply_online_Q_learning(Q_table,state,action,reward,alpha_pos,alpha_neg,gamma) : 
+def apply_online_Q_learning(bee,Q_table_list,state,action,reward,alpha_pos,alpha_neg,gamma) : 
   """
   Description: 
     A bee with Q Table (QTable), is in state (state), does action (action), gets a reward (reward)
@@ -105,13 +105,12 @@ def apply_online_Q_learning(Q_table,state,action,reward,alpha_pos,alpha_neg,gamm
   """
   delta = reward+gamma*np.max(Q_table[action,:])-Q_table[state,action]
   if delta >= 0 :
-    Q_table[state,action] = Q_table[state,action] + alpha_pos*delta
+    Q_table_list[bee,state,action] += alpha_pos*delta
   else : 
-    Q_table[state,action] = Q_table[state,action] + alpha_neg*delta
-  return(Q_table)
+    Q_table_list[bee,state,action] += alpha_neg*delta
 
 
-def apply_online_learning(probability_matrix,state,action,reward,learning_factor,abandon_factor) : 
+def apply_online_learning(bee,probability_matrix_list,state,action,reward,learning_factor,abandon_factor) : 
   """
   Description: 
     Applies online learning by T. Dubois: probability_matrix[state,action] = probability_matrix[state,action]*factor where factor=learning_factor when reward>0 and factor=abandon_factor otherwise
@@ -129,12 +128,13 @@ def apply_online_learning(probability_matrix,state,action,reward,learning_factor
     factor = learning_factor
   else :
     factor = abandon_factor
-  probability_matrix[state,action] = probability_matrix[state,action]*factor
-  probability_matrix = geometry_functions.normalize_matrix_by_row(probability_matrix)
-  return(probability_matrix)
+  probability_matrix_list[bee,state,action] *= factor
+  sum_of_probabilities = np.sum(probability_matrix_list[bee,state,:])
+  if sum_of_probabilities != 0 :
+    probability_matrix_list[bee,state,:] /= sum_of_probabilities
 
 
-def online_learning(cost_of_flying,array_geometry,use_Q_learning,learning_array,state,action,reward,alpha_pos,alpha_neg,gamma,learning_factor,abandon_factor) : 
+def online_learning(bee,cost_of_flying,array_geometry,use_Q_learning,learning_array_list,state,action,reward,alpha_pos,alpha_neg,gamma,learning_factor,abandon_factor) : 
   """
   Description: 
     Arbitration between the two apply_online_(Q)learning fuctions
@@ -150,14 +150,13 @@ def online_learning(cost_of_flying,array_geometry,use_Q_learning,learning_array,
   Outputs: 
     Updated learning array  
   """
-  matrix_of_pairwise_distances = geometry_functions.get_matrix_of_distances_between_flowers(array_geometry)
-  max_distance_between_flowers = np.max(matrix_of_pairwise_distances)
+  if reward is not None : 
 
-  if use_Q_learning :
-    if cost_of_flying : 
-      reward  = reward - matrix_of_pairwise_distances[state,action]/max_distance_between_flowers
-    learning_array = apply_online_Q_learning(learning_array,state,action,reward,alpha_pos,alpha_neg,gamma)
-  else : 
-    learning_array = apply_online_learning(learning_array,state,action,reward,learning_factor,abandon_factor)
-
-  return(learning_array)
+    if use_Q_learning :
+      if cost_of_flying : 
+        matrix_of_pairwise_distances = geometry_functions.get_matrix_of_distances_between_flowers(array_geometry)
+        max_distance_between_flowers = np.max(matrix_of_pairwise_distances)
+        reward  = reward - matrix_of_pairwise_distances[state,action]/max_distance_between_flowers
+      apply_online_Q_learning(bee,learning_array_list,state,action,reward,alpha_pos,alpha_neg,gamma)
+    else : 
+      apply_online_learning(bee,learning_array_list,state,action,reward,learning_factor,abandon_factor)

@@ -8,6 +8,7 @@ import os
 import pandas as pd
 import learning_functions
 import geometry_functions
+import time as t
 
 # Simulation functions  --------------------------------------------------------------
 
@@ -112,6 +113,7 @@ def sampling_next_destination(number_of_bees,ind,bee_route,bee_data,bee_info,arr
   potential_destinations = np.array([flower for flower in range (number_of_flowers)])
   for omitted_destination in omitted_destinations : 
     potential_destinations = np.delete(potential_destinations, np.where(potential_destinations==omitted_destination))
+
   destination_is_available = [not (flower in omitted_destinations) for flower in range (number_of_flowers)]
 
 
@@ -138,6 +140,9 @@ def sampling_next_destination(number_of_bees,ind,bee_route,bee_data,bee_info,arr
     else : 
       next_pos = potential_destinations[0] # Not sure why it is useful though
       bee_route[ind,-1] = next_pos
+
+
+
 
 
   # Update distance travelled
@@ -200,8 +205,12 @@ def competitive_interaction_on_flower(flower,flowers_visited_this_bout,bee_info)
   # Which individuals are in competition
   individuals_in_competition = np.where (np.array(flowers_visited_this_bout) == flower)[0]
   probability_of_winning  = get_probability_of_winning(individuals_in_competition,bee_info)
+
   # Which wins and which loses
+
   interaction_winner = np.random.choice(a=individuals_in_competition,p=probability_of_winning)
+
+
   interaction_losers = np.delete(individuals_in_competition,np.where(individuals_in_competition==interaction_winner))
   return(interaction_winner,interaction_losers)
 
@@ -250,7 +259,7 @@ def foraging_and_online_learning_loop(number_of_bees,bee_route,bee_data,bee_info
     still_foraging,bee_route = sampling_next_destination(number_of_bees,ind,bee_route,bee_data,bee_info,array_of_vector_used,number_of_flowers,learning_array_list,bout,still_foraging,array_geometry)
 
   # Checking if some individuals reached the same flower. If so, it triggers a competition interaction.
-  flowers_visited_this_bout = bee_route[:,-1]
+  flowers_visited_this_bout = bee_route[:,-1].flatten()
   flowers_in_competition = find_flowers_in_competition(flowers_visited_this_bout)
 
   # Competition check
@@ -261,6 +270,7 @@ def foraging_and_online_learning_loop(number_of_bees,bee_route,bee_data,bee_info
     flower=int(flower)
 
     interaction_winner,interaction_losers = competitive_interaction_on_flower(flower,flowers_visited_this_bout,bee_info)
+
 
     for loser in interaction_losers : 
 
@@ -275,7 +285,7 @@ def foraging_and_online_learning_loop(number_of_bees,bee_route,bee_data,bee_info
 
         # If use_online_reinforcement, apply punishment now
         if use_online_reinforcement : 
-          learning_array_list[loser] = learning_functions.online_learning(cost_of_flying,array_geometry,use_Q_learning,learning_array_list[loser],previous_flower,flower,0,alpha_pos[loser],alpha_neg[loser],gamma[loser],learning_factor[loser],abandon_factor[loser])
+          learning_functions.online_learning(loser,cost_of_flying,array_geometry,use_Q_learning,learning_array_list,previous_flower,flower,0,alpha_pos[loser],alpha_neg[loser],gamma[loser],learning_factor[loser],abandon_factor[loser])
 
   # If the bout is finished the bee does not feed
   who_feeds[bee_data[:number_of_bees,1]==1.] = 0
@@ -318,15 +328,14 @@ def foraging_and_online_learning_loop(number_of_bees,bee_route,bee_data,bee_info
 
             # If needed, apply online reinforcement here
             if use_online_reinforcement : 
-              learning_array_list[ind] = learning_functions.online_learning(cost_of_flying,array_geometry,use_Q_learning,learning_array_list[ind],previous_flower,flower_visited,1,alpha_pos[ind],alpha_neg[ind],gamma[ind],learning_factor[ind],abandon_factor[ind])           
+              learning_functions.online_learning(ind,cost_of_flying,array_geometry,use_Q_learning,learning_array_list,previous_flower,flower_visited,1,alpha_pos[ind],alpha_neg[ind],gamma[ind],learning_factor[ind],abandon_factor[ind])           
 
         else : # Negative outcome for this flower 
           # Why is "route compare" not checked here?? Possible answer: route compare is only for positive RL?
-
           individual_flower_outcome[ind][previous_flower,flower_visited]=-1
           # If needed, apply online reinforcement here
           if use_online_reinforcement : 
-            learning_array_list[ind] = learning_functions.online_learning(cost_of_flying,array_geometry,use_Q_learning,learning_array_list[ind],previous_flower,flower_visited,0,alpha_pos[ind],alpha_neg[ind],gamma[ind],learning_factor[ind],abandon_factor[ind])   
+            learning_functions.online_learning(ind,cost_of_flying,array_geometry,use_Q_learning,learning_array_list,previous_flower,flower_visited,0,alpha_pos[ind],alpha_neg[ind],gamma[ind],learning_factor[ind],abandon_factor[ind])   
 
   # Check end of foraging bout
   number_of_max_foraged_resourced_reached = (bee_data[:,0]==bee_info["max_crop"])
@@ -372,7 +381,7 @@ def non_online_learning_and_route_quality_update(number_of_bees,bee_route,array_
     # Get the route quality, then round it to 8 decimals (to match with the sinked value in .txt file)
     else : 
       route = geometry_functions.formatting_route(bee_route[ind,:])
-      route_quality = geometry_functions.get_quality_of_route(route,array_geometry,bee_data[ind,0])
+      route_quality = geometry_functions.compute_route_quality(bee_data[ind,0],bee_data[ind,2])
       route_quality=round(route_quality,8)
 
       # Check if the new route quality is higher than the optimal route found initially. If so, replace old optimal route.
@@ -427,6 +436,8 @@ def simulate_bout(bout,array_geometry,learning_array_list,bee_data,bee_info,opti
                             "quality" giving the qualities of the routes
                             "optimal_route_quality" giving the optimal route quality computed so far
   """
+  beg = t.time()
+
   # Retrieve parameters of the simulation
   if number_of_bees is None : 
     number_of_bees,_ = np.shape(bee_data)
@@ -455,5 +466,7 @@ def simulate_bout(bout,array_geometry,learning_array_list,bee_data,bee_info,opti
 
   competitive_bout = {"sequences":bee_route, "route_quality": route_qualities, "optimal_route_quality_1_ind":optimal_route_quality_1_ind,"optimal_route_quality_2_ind":optimal_route_quality_2_ind}
 
+  end =t.time()
+  print(end-beg)
 
   return(competitive_bout)
