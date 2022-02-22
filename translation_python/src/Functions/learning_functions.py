@@ -103,7 +103,7 @@ def apply_online_Q_learning(bee,Q_table_list,state,action,reward,alpha_pos,alpha
   Outputs: 
     Updated Q table
   """
-  delta = reward+gamma*np.max(Q_table[action,:])-Q_table[state,action]
+  delta = reward+gamma*np.max(Q_table_list[bee,action,:])-Q_table_list[bee,state,action]
   if delta >= 0 :
     Q_table_list[bee,state,action] += alpha_pos*delta
   else : 

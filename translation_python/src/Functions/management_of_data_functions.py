@@ -66,23 +66,6 @@ def initialize_Q_table_list (initialize_Q_table, array_geometry, dist_factor, nu
     return(np.array(Q_list))
 
 
-def initialize_bee_data(number_of_bees) : 
-  """
-  Description: 
-    Sets up a matrix of data that will be updated during the simulation
-  Inputs: 
-    number_of_bees: integer, number of bees
-  Outputs:
-    bee_data: matrix with number_of_bees rows and 3 columns: number_of_resources_foraged, bout_finished, distance_travelled
-      number_of_resources_foraged: number of resources foraged by the bee so far
-      bout_finished: 0/1 says if the bout is finished for this bee
-      distance_travelled: total distance travelled by the bee so far
-      best_route_quality: best_route_quality found so far
-  """
-
-  bee_data = np.zeros((number_of_bees,4))
-  return(bee_data)
-
 
 def initialize_bee_info(number_of_bees,parameters_dict) :
   """
@@ -109,20 +92,6 @@ def initialize_bee_info(number_of_bees,parameters_dict) :
 def add_array_ID_to_bee_info(bee_info, array_ID,number_of_bees) :
   bee_info["array_ID"] = [array_ID for k in range (number_of_bees)]
   return()
-
-
-def reboot_bee_data(bee_data) : 
-  """
-  Description:
-    Resets the parameters of beeData between bouts.
-  Inputs:
-    bee_data: numpy matrix containing relevant information about the bees
-  Outputs:
-    The updated bee_data matrix
-  """
-  bee_data[:,0] = 0.
-  bee_data[:,1] = 0.
-  bee_data[:,2] = 0. 
 
 
 def make_arrays_and_output_folders(silent_sim) : 
@@ -203,11 +172,6 @@ def initialize_data_of_current_test(list_of_names_of_parameters,parameter_values
   Outputs:
     Some useful variables for the test
   """
-  number_of_parameter_sets += 1
-
-  # Retrieve some general parameters
-  use_Q_learning = get_value_of_parameter_in_current_test("use_Q_learning",list_of_names_of_parameters,parameter_values)
-  initialize_Q_table = get_value_of_parameter_in_current_test("initialize_Q_table",list_of_names_of_parameters,parameter_values)
 
   # Create test name according to parameter values
   test_name = create_name_of_test(array_info["environment_type"],experiment_name,number_of_parameter_sets,silent_sim)
@@ -219,23 +183,21 @@ def initialize_data_of_current_test(list_of_names_of_parameters,parameter_values
   # Complete list of individual parameters. These are initialized with parameters_loop
   parameters_dict = dict(zip(list_of_names_of_parameters,parameter_values))
 
-  # Initialize the parameter matrix for each bee
-  bee_data = initialize_bee_data(number_of_bees)
-
   # Create a dataframe of information to be retrieve in further analyses and passed to the simulation functions (and remember what parameters were used).
   bee_info = initialize_bee_info(number_of_bees,parameters_dict)
 
-  return(number_of_parameter_sets, use_Q_learning, initialize_Q_table, test_name, output_folder_of_test, parameters_dict, bee_data,bee_info)
+  return( test_name, output_folder_of_test, parameters_dict,bee_info)
 
 
 
 
-def initialize_data_of_current_array(array_info, array_number, reuse_generated_arrays, current_working_directory, silent_sim, dist_factor, number_of_bees, bee_data,bee_info,initialize_Q_table,parameters_dict,output_folder_of_test):
+def initialize_data_of_current_array(array_info, array_number, reuse_generated_arrays, current_working_directory, silent_sim, number_of_bees,bee_info,parameters_dict,output_folder_of_test):
   # Generate array
   array_geometry, array_info, array_folder = environment_generation_functions.create_environment(array_info, array_number, reuse_generated_arrays, current_working_directory, silent_sim)
 
   # Initialize learning array list
   use_Q_learning = bee_info["use_Q_learning"][0]
+  
   if use_Q_learning : 
     initial_learning_array_list = initialize_Q_table_list (bee_info["initialize_Q_table"][0], array_geometry, bee_info["dist_factor"][0], number_of_bees,bee_info["allow_nest_return"])
   else : 
@@ -246,12 +208,12 @@ def initialize_data_of_current_array(array_info, array_number, reuse_generated_a
   add_array_ID_to_bee_info(bee_info, array_info["array_ID"],number_of_bees)
 
   # Get maximum route quality of the array (simulating _ 1Ind for 30 each bouts to try and find the optimal route).
-  optimal_route_quality_1_ind = optimal_route_assessment_functions.retrieve_optimal_route(array_geometry,bee_data,bee_info,array_folder,silent_sim,0,None,number_of_bees=1)
+  optimal_route_quality_1_ind = optimal_route_assessment_functions.retrieve_optimal_route(array_geometry,bee_info,array_folder,silent_sim,0,None,number_of_bees=1)
   if not silent_sim : 
     print("Optimal route quality for 1 individual: "+str(optimal_route_quality_1_ind))
 
   # Get maximum route quality for 2 ind of the array (simulating _ 2Ind for 30 each bouts to try and find the optimal route).
-  optimal_route_quality_2_ind = optimal_route_assessment_functions.retrieve_optimal_route(array_geometry,bee_data,bee_info,array_folder,silent_sim,0,0,number_of_bees=2)
+  optimal_route_quality_2_ind = optimal_route_assessment_functions.retrieve_optimal_route(array_geometry,bee_info,array_folder,silent_sim,0,0,number_of_bees=2)
   if not silent_sim : 
     print("Optimal route quality for 2 individuals: "+str(optimal_route_quality_2_ind))
 

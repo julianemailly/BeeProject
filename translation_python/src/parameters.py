@@ -25,7 +25,6 @@ Remark: if you want to test 1 set of values for different bees (only 1 test but 
 
 Please be careful when initializing parameters that are necessarily lists. Please find the instructions to initialize those specific parameters just below: 
 	beta_vector (when use_dynamic_beta is True): this parameter always take a list of beta values for each bout. Therefore, to do only one test (precise the dynamic values of beta for each bee for one test) you must necessarily implement it such as beta_vector = [[list_of_value_per_bout_bee_1, ...,list_of_value_per_bout_bee_n]] 
-	starting_bout_for_naive (when use_delay_start is True): this parameter must always take a list of values for each bee. Therefore, if you only want to test one set of values, do starting_bout_for_naive=[your_list_of_values]
 '''
 
 
@@ -59,8 +58,8 @@ These parameters can only take a single value (not a list).
 '''
 
 # Simulation parameters
-number_of_simulations = 1 # Number of simulations for each set of parameter.
-number_of_bouts = 1 # Number of bouts in each simulation.
+number_of_simulations = 100 # Number of simulations for each set of parameter.
+number_of_bouts = 30 # Number of bouts in each simulation.
 number_of_bees = 2 # Number of bees moving simultaneously in the environment.
 dist_factor = 2 # This variable contains the power at which the distance is taken in the [probability = 1/d^distFactor] function to estimate movement probabilities when not use_Q_learning or if initialize_Q_table = "distance".
 
@@ -68,7 +67,7 @@ dist_factor = 2 # This variable contains the power at which the distance is take
 silent_sim = False  # If False, provides comments in the Console on the progression of the simulation.
 sensitivity_analysis = False # If True, computes the absolute difference between successive learning arrays for each bee
 video_output = False # If  True, outputs videos showing the bee movements during simulation. NOT IMPLEMENTED YET.
-
+stochasticity = True # Can deactivate the stochasticity in the simulation (useful to debug the code)
 
 
 
@@ -76,19 +75,13 @@ video_output = False # If  True, outputs videos showing the bee movements during
 ########## PARAMETERS OF THE SIMULATION ##########
 '''
 These parameters can be initialized as a list but each bee much have the same value for each parameter (see case 2 in the initilalization guide at line 9 fo this document).
-EXCEPTION: strating_bout_for_naive (see line 28)
 '''
 
 # Algorithm specifications
-use_route_compare = False # True : Use the route-based learning algorithm (Reynolds et al., 2013). False : Use our vector-based algorithm. /!\ Warning : The route-based algorithm is not identical to that of Reynolds et al., 2013. Mainly, it uses the route with revisits when assessing route quality.
-use_online_reinforcement =  True  # If  True, probability changes after a good/bad experience is immediate and not at the end of the bout.
-use_Q_learning = False  # True: if you want to use this Q learning model, False: if you want to use T. Dubois' model
-if (use_Q_learning) : use_online_reinforcement = True # Q-Learning is necessarily online
+use_Q_learning = True  # True: if you want to use this Q learning model, False: if you want to use T. Dubois' model
 initialize_Q_table = "distance"  # 'zero' if yo want the Q table to be initialized as a None matrix, 'distance' if you want it to be initialized as the 1/d^distFactor matrix, 'noisydist if you want to add noise to the distance ditribution
 cost_of_flying = False # True: will define the reward as presence_of_nectar_in_tne_flower - travelled_distance_from_the_previous_flower / max_distance_between_flowers
 use_dynamic_beta=False # Use a dynamic beta that changes throughout time
-use_delay_start = False  # If  True & numberOfBees = 2 : Setup the simulation so that Bee 1 starts foraging for n bouts before Bee 2 starts foraging.
-starting_bout_for_naive = None # Bout at which each bee starts foraging. Should be < to number_of_bouts. Expects as many values as the number_of_bees if use_delay_start is True.
 
 
 
@@ -103,7 +96,6 @@ EXCEPTION: beta_vector (see line 27)
 # Forager parameters
 max_distance_travelled = 3000 # Maximum distance the bee can travel before being exhausted. After reaching this threshold, the bee goes back to its nest no matter what.
 max_crop = 5 # Maximum number of flowers for the bee's crop to be full
-probability_of_winning = 1/2 # Probability to win a competitive interaction for each bee
 
 # Parameters controlling the available destinations when choosing a new flower
 leave_after_max_fail = False  # If a vector use leads to no reward number_of_max_fails times in a bout, forbid its use until the end of the bout.
@@ -147,19 +139,14 @@ array_info = {
 }
 
 simulation_parameters = {
-"use_route_compare":use_route_compare,
-"use_online_reinforcement": use_online_reinforcement,
 "use_Q_learning":use_Q_learning,
 "initialize_Q_table":initialize_Q_table,
 "dist_factor" : dist_factor,
 "cost_of_flying":cost_of_flying,
-"use_dynamic_beta":use_dynamic_beta,
-"use_delay_start":use_delay_start,
-"starting_bout_for_naive":starting_bout_for_naive
+"use_dynamic_beta":use_dynamic_beta
 }
 
 parameters_of_individuals  = {
-"probability_of_winning": probability_of_winning,
 "max_distance_travelled": max_distance_travelled,
 "max_crop":max_crop,
 "beta_vector":beta_vector,

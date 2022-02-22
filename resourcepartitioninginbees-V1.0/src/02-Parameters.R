@@ -15,7 +15,7 @@ reuseGeneratedArrays = TRUE; # If TRUE and there already are generated arrays wi
 
 # Simulation parameters
 numberOfBees = 2; # Number of bees moving simultaneously in the environment.
-numberOfSimulations = 200; # Number of simulations for each set of parameter.
+numberOfSimulations = 100; # Number of simulations for each set of parameter.
 numberOfBouts = 30; # Number of bouts in each simulation.
 distFactor = 2; # This variable contains the power at which the distance is taken in the [probability = 1/d^distFactor] function to estimate movement probabilities.
 
@@ -44,7 +44,7 @@ startingBoutForNaive = c(1); # Bout at which each bee starts foraging. Should be
 onlineReinforcement = TRUE; # If TRUE, probability changes after a good/bad experience is immediate and not at the end of the bout.
 
 # Parameters for the Q-learning/Rescorla-Wagner model
-useQLearning=FALSE; #TRUE: if you want to use this Q learning model, FALSE: if you want to use T. Dubois' model
+useQLearning=TRUE; #TRUE: if you want to use this Q learning model, FALSE: if you want to use T. Dubois' model
 initializeQTable="distance"; #'zero' if yo want the Q table to be initialized as a null matrix, 'distance' if you want it to be initialized as the 1/d^distFactor matrix, 'noisydist if you want to add noise to the distance ditribution
 alphaPosList=list(0.4); #positive reinforcement learning rate: 0<=alphaPos<=1
 alphaNegList=list(0.4); #negative reinforcement learning rate: 0<=alphaNeg<=1

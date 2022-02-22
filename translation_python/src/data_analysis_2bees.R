@@ -49,7 +49,7 @@ source("01-Functions.R")
 
 # Simulation specifications
 numberOfArrays = 1;
-numberOfSimulations = 100;
+numberOfSimulations = 200;
 numberOfBouts = 30;
 numberOfBees = 2;
 
