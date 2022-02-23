@@ -49,7 +49,7 @@ source("01-Functions.R")
 
 # Simulation specifications
 numberOfArrays = 1;
-numberOfSimulations = 200;
+numberOfSimulations = 100;
 numberOfBouts = 30;
 numberOfBees = 2;
 
@@ -83,7 +83,7 @@ numberOfTests = length(testFolders);
 arrayTypesOnData = c();
 learningFactors = c();
 abandonFactors = c();
-routeCompares = c();
+QLearnings = c();
 for(fld in testFolders)
 {
   beeInfos = read.csv(paste(outputDirectory,"/",fld,"/Array00/bee_info.csv",sep=""))
@@ -93,7 +93,7 @@ for(fld in testFolders)
   beeInfos = read.csv(paste(outputDirectory,"/",fld,"/Array00/bee_info.csv",sep=""))
   learningFactors = c(learningFactors,beeInfos$learning_facto[1]);
   abandonFactors = c(abandonFactors,beeInfos$abandon_factor[1]);
-  if(beeInfos$use_route_compare[1]) routeCompares = c(routeCompares,"routeCompare") else routeCompares = c(routeCompares,"noRouteCompare");
+  if(beeInfos$use_Q_learning[1]) QLearnings = c(QLearnings,"QLearning") else QLearnings = c(QLearnings,"noQLearning");
   
   arrayNameChr = paste("R",arrayInfos$numberOfResources,"-P",arrayInfos$numberOfPatches,sep="")
   
@@ -106,7 +106,7 @@ for(fld in testFolders)
 numberOfArrayTypes = length(arrayTypesOnData)
 
 outputData = data.frame(arrayType = rep(arrayTypesOnData,each=(numberOfTests/numberOfArrayTypes)*numberOfArrays*numberOfSimulations*numberOfBouts*numberOfBees),
-                        algorithm = rep(routeCompares,each=numberOfArrays*numberOfSimulations*numberOfBouts*numberOfBees),
+                        algorithm = rep(QLearnings,each=numberOfArrays*numberOfSimulations*numberOfBouts*numberOfBees),
                         learningValue = rep(learningFactors,each=numberOfArrays*numberOfSimulations*numberOfBouts*numberOfBees),
                         abandonValue = rep(abandonFactors,each=numberOfArrays*numberOfSimulations*numberOfBouts*numberOfBees),
                         arrayNumber = rep(c(1:numberOfArrays),each=numberOfSimulations*numberOfBouts*numberOfBees,times=numberOfTests),
@@ -471,7 +471,7 @@ for(testNumber in 1:length(testFolders))
   similarityVector[c(lineSimilarity:(lineSimilarity+dataLength-1))] = extractSimilarity;
   lineSimilarity = lineSimilarity + dataLength;
   
-  if(beeInfos$use_route_compare[1]) algorithmChr = "routeCompare" else algorithmChr = "noRouteCompare"
+  if(beeInfos$use_Q_learning[1]) algorithmChr = "QLearning" else algorithmChr = "noQLearning"
   
   reorgData = data.frame(arrayType = arrayType,
                          algorithm = algorithmChr,

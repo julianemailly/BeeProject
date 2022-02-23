@@ -62,28 +62,10 @@ def get_matrix_of_distances_between_flowers(array_geometry) :
 	Outputs: 
 		matrix_of_pairwise_distances: matrix of size number_of_flowers*number_of_flowers gibing the euclidean distance between pairs of flowers
 	"""
-	print("get matrix of distances")
 	matrix_of_coordinates = array_geometry[["x","y"]] # keep the coordinates
 	matrix_of_pairwise_distances = euclidean_distances (matrix_of_coordinates,matrix_of_coordinates)
 	return(matrix_of_pairwise_distances)
 
-
-def get_route_length(route,array_geometry) : 
-	"""
-	Inputs: 
-		route: vector of the index of visited flowers during a bout
-		array_geometry: pandas dataframe of size 4*number_of_flowers : flower ID, x, y, patch ID
-	Outputs: 
-		route_length: total length of the route
-	"""
-	matrix_of_pairwise_distances = get_matrix_of_distances_between_flowers(array_geometry)
-	number_of_flowers_in_route = len(route)
-	route_length = 0
-	for flower_index in range (number_of_flowers_in_route-1) : 
-		previous_flower = route[flower_index]
-		next_flower = route[flower_index+1]
-		route_length += matrix_of_pairwise_distances[previous_flower,next_flower]
-	return(route_length)
 
 
 def give_probability_of_vector_with_dist_factor(x,dist_factor) :
@@ -119,41 +101,3 @@ def compute_route_quality(number_of_flowers_foraged,route_length) :
 		return(0)
 	else :
 		return(number_of_flowers_foraged**2/route_length)
-
-
-def get_quality_of_route(route,array_geometry,list_of_resources_foraged) : 
-	"""
-	Description:
-		Computes the route quality of a given visitation sequence
-	Inputs:
-		route: list of indices of flowers visited during a bout
-		array_geometry: pandas dataframe of size 4*number_of_flowers : flower ID, x, y, patch ID
-		list_of_resources_foraged: list of how many resources were foraged on each flower of the route
-	Outputs: 
-		Route quality (float)
-	"""
-	if len(route)==0 : 
-		return(0)
-	else : 
-		route_length = get_route_length(route,array_geometry)
-		number_of_foraged_resources = np.sum(list_of_resources_foraged)
-		route_quality = compute_route_quality(number_of_foraged_resources,route_length)
-		return(route_quality)
-
-
-def formatting_route(route):
-	"""
-	Description: 
-		Takes a route such as [0,n1,n2,...,np,0,...,0] and remove the unecessary 0 to make [0,n1,n2,...,np,0]
-	Inputs:
-		route: [0,n1,n2,...,np,0,...,0]
-	Outputs:
-		route: [0,n1,n2,...,np,0]
-	"""
-	route=np.array(route)
-	route_length = len(route)
-	i = route_length - 1
-	while i!=0 and route[i] == -1:
-		route = np.delete(route,i)
-		i=i-1
-	return(route)

@@ -9,7 +9,6 @@ import time
 import copy
 import itertools
 
-
 import bout_functions
 import management_of_data_functions
 
@@ -193,7 +192,6 @@ def simulation(current_working_directory,experiment_name,array_info,number_of_ar
 
       array_geometry, array_info, array_folder, optimal_route_quality_1_ind, optimal_route_quality_2_ind, output_folder_of_sim,initial_learning_array_list = management_of_data_functions.initialize_data_of_current_array(array_info, array_number, reuse_generated_arrays, current_working_directory, silent_sim, number_of_bees,bee_info,parameters_dict,output_folder_of_test)
       optimal_route_quality_1_ind,optimal_route_quality_2_ind = simulation_loop(initial_learning_array_list,number_of_simulations,number_of_bouts,number_of_bees,optimal_route_quality_1_ind, optimal_route_quality_2_ind,bee_info,array_geometry,silent_sim,array_folder,output_folder_of_sim,sensitivity_analysis,stochasticity)
-
 
     # Video output: not developed yet  ---------------------------------------------------------------------------------------------------------
 

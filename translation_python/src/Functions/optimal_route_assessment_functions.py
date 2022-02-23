@@ -66,7 +66,6 @@ def optimal_route_assessment(array_geometry,bee_info,array_folder,silent_sim,opt
 
     # The simulations will be done without Q_Learning for the moment and use_dynamic_beta will be forcedly disactivated: 
     saved_use_Q_learning = copy.deepcopy(bee_info.loc[:, "use_Q_learning"])
-    saved_use_online_reinforcement = copy.deepcopy(bee_info.loc[:, "use_online_reinforcement"])
     saved_use_dynamic_beta = copy.deepcopy(bee_info.loc[:, "use_dynamic_beta"])
     saved_beta_vector = copy.deepcopy(bee_info.loc[:, "beta_vector"])
 
@@ -86,7 +85,7 @@ def optimal_route_assessment(array_geometry,bee_info,array_folder,silent_sim,opt
 
       for bout in range (number_of_bouts) : 
 
-        bee_route,route_qualities,optimal_route_quality_1_ind,optimal_route_quality_2_ind =  bout_functions.simulate_bout(bout,bee_info,learning_array_list,array_geometry,optimal_route_quality_1_ind,optimal_route_quality_2_ind,number_of_bees)
+        bee_route,route_qualities,optimal_route_quality_1_ind,optimal_route_quality_2_ind,number_of_resources_foraged =  bout_functions.simulate_bout(bout,bee_info,learning_array_list,array_geometry,optimal_route_quality_1_ind,optimal_route_quality_2_ind,True,number_of_bees)
 
         optimal_route_quality_for_every_bee = np.sum(route_qualities) # allow to compute groupe quality without specifying the number of bees
 
@@ -109,7 +108,6 @@ def optimal_route_assessment(array_geometry,bee_info,array_folder,silent_sim,opt
 
     # Do not forget to put back the original use_Q_learning and use_online_reinforcement paramters in bee_info
     bee_info.loc[:, "use_Q_learning"] = saved_use_Q_learning
-    bee_info.loc[:, "use_online_reinforcement"] = saved_use_online_reinforcement
     bee_info.loc[:, "use_dynamic_beta"] = saved_use_dynamic_beta
     bee_info.loc[:, "beta_vector"] = saved_beta_vector
     return(best_qual_for_all_sim)

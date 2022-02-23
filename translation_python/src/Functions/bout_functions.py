@@ -198,7 +198,7 @@ def punish_and_reward_bees(number_of_resources_foraged,number_of_bees,bee_route,
 						array_of_vector_used[previous_flower,current_flower,bee]+=1
 
 			# Apply online learning
-			learning_functions.online_learning(bee,cost_of_flying,array_geometry,use_Q_learning,learning_array_list,previous_flower,current_flower,reward,alpha_pos[bee],alpha_neg[bee],gamma[bee],learning_factor[bee],abandon_factor[bee])
+			learning_functions.apply_online_learning(bee,cost_of_flying,array_geometry,use_Q_learning,learning_array_list,previous_flower,current_flower,reward,alpha_pos[bee],alpha_neg[bee],gamma[bee],learning_factor[bee],abandon_factor[bee])
 
 def check_if_bout_finished(number_of_resources_foraged,distance_travelled,number_of_bees,bee_route,bees_still_foraging,bees_going_back_to_nest,bees_in_nest,bee_info):
 

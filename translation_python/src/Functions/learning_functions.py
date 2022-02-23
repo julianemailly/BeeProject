@@ -9,70 +9,6 @@ import geometry_functions
 
 # Learning --------------------------------------------------------------
 
-def apply_learning (route, probability_matrix_list,individual_flower_outcome,bee_data,bee_info,route_quality,ind) : 
-    """
-    Description:
-      Change the probability matrix of a individual depending on its last performed bout.
-    Inputs:
-      route: vector of the index of visited flowers during a bout
-      probability_matrix: matrix of array size * array size, with probabilities to do each vector linking two flowers
-      flower_outcome_matrix : matrix of array size * array size, with values of -1 (negative outcome), 0 (no visit) or 1 (positive outcome).
-      bee_data: pandas dataframe of relvant data about the bees that will be updated during the simulation
-    bee_info: pandas dataframe of the parameters 
-      route_quality : numeric value of last route quality experienced. used in routeCompare situations.
-    Outputs:
-      probability matrix: updated probability matrix
-    """
-    probability_matrix = probability_matrix_list[ind]
-    flower_outcome_matrix = individual_flower_outcome[ind]
-
-    if np.shape(probability_matrix) != np.shape(flower_outcome_matrix) : 
-      raise ValueError ("probability_matrix and flower_outcome matrices of different lengths!")
-
-    # Apply learning and abandon factor to flower outcomes
-    nrow,ncol = np.shape(probability_matrix)
-
-    if not (bee_info["use_route_compare"][0]) : 
-      # No route comparison, probe all values in the flower_outcome_matrix to input the changes in probabilities.
-      factor_matrix = np.ones((nrow,ncol))
-
-      for row in range (nrow): 
-        for col in range (ncol) : 
-
-          if flower_outcome_matrix[row,col] == 1 :
-            factor_matrix[row,col] = bee_info["learning_factor"][ind]
-
-          if flower_outcome_matrix[row,col] == -1 :
-            factor_matrix[row,col] = bee_info["abandon_factor"][ind]
-    else : 
-      factor_matrix = np.ones((nrow,ncol))
-
-      # Check if new route is better or equal
-      if (route_quality >= bee_data[ind,3]) and (bee_data[ind,0]==bee_info["crop_capacity"][ind]) and (bee_data[ind,3]>=0) : 
-
-        # Add all vectors of the route as a positive outcome
-        number_of_flowers_in_route = len(route)
-
-        for i in range (number_of_flowers_in_route-1) : 
-
-          current_flower = route[i]
-          next_flower = route[i+1]
-          factor_matrix[current_flower,next_flower] = bee_info["learning_factor"][ind]
-
-      # Indifferent to the route comparison, apply the abandon.
-      for row in range (nrow): 
-        for col in range (ncol) : 
-
-          if flower_outcome_matrix[row,col] == -1 :
-            factor_matrix[row,col] = bee_info["abandon_factor"][ind]
-
-    # Multiply the factor and the probability matrices element-wise and normalize it.
-    probability_matrix = probability_matrix*factor_matrix
-    probability_matrix = geometry_functions.normalize_matrix_by_row(probability_matrix)
-
-    return(probability_matrix)
-
-
 def softmax(values_vector,beta) : 
     """
     Description:
@@ -110,7 +46,7 @@ def apply_online_Q_learning(bee,Q_table_list,state,action,reward,alpha_pos,alpha
     Q_table_list[bee,state,action] += alpha_neg*delta
 
 
-def apply_online_learning(bee,probability_matrix_list,state,action,reward,learning_factor,abandon_factor) : 
+def apply_online_multiplicative_learning(bee,probability_matrix_list,state,action,reward,learning_factor,abandon_factor) : 
   """
   Description: 
     Applies online learning by T. Dubois: probability_matrix[state,action] = probability_matrix[state,action]*factor where factor=learning_factor when reward>0 and factor=abandon_factor otherwise
@@ -134,7 +70,7 @@ def apply_online_learning(bee,probability_matrix_list,state,action,reward,learni
     probability_matrix_list[bee,state,:] /= sum_of_probabilities
 
 
-def online_learning(bee,cost_of_flying,array_geometry,use_Q_learning,learning_array_list,state,action,reward,alpha_pos,alpha_neg,gamma,learning_factor,abandon_factor) : 
+def apply_online_learning(bee,cost_of_flying,array_geometry,use_Q_learning,learning_array_list,state,action,reward,alpha_pos,alpha_neg,gamma,learning_factor,abandon_factor) : 
   """
   Description: 
     Arbitration between the two apply_online_(Q)learning fuctions
@@ -159,4 +95,4 @@ def online_learning(bee,cost_of_flying,array_geometry,use_Q_learning,learning_ar
         reward  = reward - matrix_of_pairwise_distances[state,action]/max_distance_between_flowers
       apply_online_Q_learning(bee,learning_array_list,state,action,reward,alpha_pos,alpha_neg,gamma)
     else : 
-      apply_online_learning(bee,learning_array_list,state,action,reward,learning_factor,abandon_factor)
+      apply_online_multiplicative_learning(bee,learning_array_list,state,action,reward,learning_factor,abandon_factor)
