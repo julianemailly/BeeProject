@@ -1,0 +1,3 @@
+ID,max_distance_travelled,max_crop,beta_vector,leave_after_max_fail,number_of_max_fails,forbid_reverse_vector,allow_nest_return,beta,alpha_pos,alpha_neg,gamma,learning_factor,abandon_factor,use_Q_learning,initialize_Q_table,dist_factor,cost_of_flying,use_dynamic_beta,array_ID
+0,3000,5,,False,2,True,True,15.0,0.4,0.4,0,1.5,0.75,True,distance,2,False,False,Array-10-1-0-None-500_00
+1,3000,5,,False,2,True,True,15.0,0.4,0.4,0,1.5,0.75,True,distance,2,False,False,Array-10-1-0-None-500_00

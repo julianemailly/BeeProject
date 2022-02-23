@@ -28,6 +28,14 @@ def normalize_array_geometry(array_geometry) :
 
 
 def load_and_normalize_array_geometry(file_name) : 
+  '''
+  Description: 
+    Load an array_geometry.csv file and normalize it
+  Input: 
+    file_name: path to the array_geometry.csv file
+  Ouput: 
+    array_geometry
+  '''
   return(normalize_array_geometry(pd.read_csv(file_name)))
 
 
@@ -142,7 +150,11 @@ def generate_array_procedurally(number_of_flowers,number_of_patches,patchiness_i
     Choose them wisely to create a relevant environment for your species.
   Inputs:
     number_of_flowers: total number of flowers 
+    number_of_patches: number of patches of flowers
     patchiness_index: float between 0 (nearly uniform distribution of flowers) and 1 (very patchy), depicting the degree of patchiness_index.
+    environment_size: size of environment
+    flowers_per_patch: list of number of flowers per patch (of length number_of_patches). If None, will be generated
+    silent_sim: if True, prevents from printing
   Outputs:
     array_geometry: pandas dataframe with 4 columns: (flower) ID, x, y, patch (ID)
   """
@@ -274,7 +286,13 @@ def create_environment (array_info, array_number, reuse_generated_arrays,current
   Inputs: 
       array_info: dictionary with the different characteristics of an array
       array_number: integer, gives the array number
-  Outputs: (array_geometry,array_info,array_folder)
+      reuse_generated_arrays: if True, will reuse previously generated arrays
+      current_working_directory: path of the current woring directory (of the main file)
+      silent_sim: if True, prevents from printing
+  Outputs: 
+    array_geometry: pandas dataframe with 4 columns: (flower) ID, x, y, patch (ID)
+    array_info: updated array_info
+    array_folder: path to the /Arrays/name_of_this_specific_array folder
   '''
 
   # This code is used if you generate the environment procedurally

@@ -44,9 +44,9 @@ def normalize_matrix_by_row (matrix) :
 def distance(point1,point2) : 
 	"""
 	Description:
-		Gives the euclidean distance between to points in a 2D space.
+		Gives the euclidean distance between two points in a 2D space.
 	Inputs: 
-		point1, point2: two points
+		point1, point2: two points (either list of coordinates or tuple)
 	Outputs: 
 		Euclidean distance between point1 and point2
 	"""
@@ -56,7 +56,7 @@ def distance(point1,point2) :
 def get_matrix_of_distances_between_flowers(array_geometry) : 
 	"""
 	Description:
-		Given the position of flowers, compute the mtrix of pairwise distances between flowers
+		Given the position of flowers, compute the matrix of pairwise distances between flowers
 	Inputs: 
 		array_geometry: pandas dataframe of size 4*number_of_flowers : flower ID, x, y, patch ID
 	Outputs: 

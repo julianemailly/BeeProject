@@ -2,39 +2,22 @@ import numpy as np
 import pandas as pd
 import learning_functions
 import geometry_functions
+import management_of_data_functions
 
 
-def initialize_bee_route(number_of_bees) :
-	return(np.full((number_of_bees,1),0))
-
-def initialize_resources_on_flowers(number_of_flowers):
-	resources_on_flowers = np.full(number_of_flowers,1)
-	resources_on_flowers[0]=0 # nest
-	return(resources_on_flowers)
-
-def initialize_array_of_vector_used(number_of_bees,number_of_flowers) :
-	return(np.zeros((number_of_flowers,number_of_flowers,number_of_bees)))
-
-def initialize_count_transitions(number_of_bees,number_of_flowers) : 
-	return(np.full((number_of_bees,number_of_flowers,number_of_flowers),0))
-
-def initialize_bees_still_foraging(number_of_bees) :
-	return([True for bee in range(number_of_bees)])
-
-def initialize_bees_going_back_to_nest(number_of_bees) :
-	return([False for bee in range (number_of_bees)])
-
-def initialize_bees_in_nest(number_of_bees):
-	return([False for bee in range (number_of_bees)])
-
-def initialize_number_of_resources_foraged(number_of_bees) :
-	return([0 for bee in range (number_of_bees)])
-
-def initialize_distance_travelled(number_of_bees) :
-	return([0. for bee in range(number_of_bees)])
-
-def get_available_destinations(bee_info,number_of_flowers,current_position,previous_position,bee,array_of_vector_used):
-
+def get_available_destinations(bee_info,number_of_flowers,current_position,previous_position,bee,count_failed_transitions):
+	"""
+	Description:
+	Inputs:
+		bee_info: dataframe of parameters for each bee
+		number_of_flowers: number of flowers including nest
+		current_position: index of the current position of the bee (flower ID)
+		previous_position: index of the previous position of the bee (flower ID)
+		bee: bee ID
+		count_failed_transitions: matrix of size (numer_of_bees, number_of_flowers,number_of_flowers) counting transitions that led to a negative outcome
+	Outputs: 
+		available_destinations: list of available destinations
+	"""
 	omitted_destinations = [current_position] # At least the self-loop is forbidden.
 
 	if not (bee_info["allow_nest_return"][bee]) : # If condition, omit the nest.
@@ -44,27 +27,53 @@ def get_available_destinations(bee_info,number_of_flowers,current_position,previ
 		omitted_destinations.append(previous_position)
 
 	if bee_info["leave_after_max_fail"][bee] : 
-		omitted_destinations=np.concatenate((omitted_destinations,np.where(array_of_vector_used[current_position,:,bee]==bee_info["number_of_max_fails"][bee])[0]))
+		omitted_destinations=np.concatenate((omitted_destinations,np.where(count_failed_transitions[bee,current_position,:]==bee_info["number_of_max_fails"][bee])[0]))
 
 	omitted_destinations = np.unique(omitted_destinations) # Make sure each flower is mentioned only once.
-	potential_destinations = np.array([flower for flower in range (number_of_flowers)])
+	available_destinations = np.array([flower for flower in range (number_of_flowers)])
 
 	for omitted_destination in omitted_destinations : 
-		potential_destinations = np.delete(potential_destinations, np.where(potential_destinations==omitted_destination))
+		available_destinations = np.delete(available_destinations, np.where(available_destinations==omitted_destination))
 
-	return(potential_destinations)
+	return(available_destinations)
 
-def choose_next_position(distance_travelled,number_of_visits,bout,bee_info,number_of_flowers,number_of_bees,bee_route,bees_still_foraging,bees_going_back_to_nest,bees_in_nest,current_positions,learning_array_list,array_of_vector_used,array_geometry,count_transitions,stochasticity):
+def choose_next_position(distance_travelled,number_of_visits,bout,bee_info,number_of_flowers,number_of_bees,bee_route,is_bee_still_foraging,is_bee_going_back_to_nest,is_bee_in_nest,learning_array_list,count_failed_transitions,array_geometry,count_transitions,stochasticity):
+	"""
+	Description:
+		Choose the next position of each bee still foraging and ensures that the bees that have finished their bout are going back to the nest
+	Inputs:
+		distance_travelled: list of distance travelled so far by each bee
+		number_of_visits: number of visits made during this bout so far
+		bout: index of bout
+		bee_info: dataframe of parameters for each bee
+		number_of_flowers: number of flowers including nest
+		number_of_bees: number of bees 
+		bee_route: matrix of size number_of_bees*number_of_visits(so far) that contain the current sequence of actions for each bee
+		is_bee_still_foraging: bool list of size number_of_bees such as is_bee_still_foraging[bee] is True if bee is still foraging
+		is_bee_going_back_to_nest: bool list of size number_of_bees such as is_bee_going_back_to_nest[bee] is True if bee is going back to the nest
+		is_bee_in_nest: bool list of size number_of_bees such as is_bee_in_nest[bee] is True if bee is in the nest
+		current_positions: list of current positions of the bees
+		learning_array_list: numpy array of size number_of_bees*number_of_flowers*number_of_flowers giving the learning arry of each bee
+		count_failed_transitions: matrix of size (numer_of_bees, number_of_flowers,number_of_flowers) counting transitions that led to a negative outcome
+		array_geometry: pd dataframe storing the position fo each flower (including nest)
+		count_transitions: matrix of size (numer_of_bees, number_of_flowers,number_of_flowers) counting the number of transitions
+		stochasticity: bool, if False deactivate stochasticity in the simulation
+	Outputs: 
+		(some lists are updated in place)
+		flowers_in_conflict: list of flowers that were chosen by two or more bees
+		bee_route: updated bee_route with the new positions
+	"""
 
 	use_Q_learning = bee_info["use_Q_learning"][0]
 	is_flowers_in_conflict = [False for flower in range (number_of_flowers)]
 	next_positions = np.full((number_of_bees,1),-1)
 
+	current_positions = bee_route[:,-1]
 
 	for bee in range (number_of_bees) :
 
 		# Ensures that the bees that have finished their bout are going back to the nest
-		if bees_going_back_to_nest[bee] : 
+		if is_bee_going_back_to_nest[bee] : 
 
 			current_position = current_positions[bee]
 
@@ -77,10 +86,10 @@ def choose_next_position(distance_travelled,number_of_visits,bout,bee_info,numbe
 				next_position_coordinates = (0.,0.) # Coordinates of the nest
 				distance_travelled[bee] += geometry_functions.distance(current_position_coordinates,next_position_coordinates)
 
-			bees_going_back_to_nest[bee] = False
-			bees_in_nest[bee]=True
+			is_bee_going_back_to_nest[bee] = False
+			is_bee_in_nest[bee]=True
 
-		if bees_still_foraging[bee] :
+		if is_bee_still_foraging[bee] :
 
 			# Get available destination for this bee
 			current_position = current_positions[bee]
@@ -90,7 +99,7 @@ def choose_next_position(distance_travelled,number_of_visits,bout,bee_info,numbe
 			else : 
 				previous_position = None
 
-			available_destinations = get_available_destinations(bee_info,number_of_flowers,current_position,previous_position,bee,array_of_vector_used)
+			available_destinations = get_available_destinations(bee_info,number_of_flowers,current_position,previous_position,bee,count_failed_transitions)
 			destination_is_available = [(flower in available_destinations) for flower in range (number_of_flowers)]
 
 			# Get the probabilities
@@ -144,7 +153,17 @@ def choose_next_position(distance_travelled,number_of_visits,bout,bee_info,numbe
 	return(flowers_in_conflict,bee_route)
 
 def resolve_conflit(flowers_in_conflict,bee_route,number_of_bees,stochasticity):
-
+	"""
+	Description:
+		Solve the competitive interaction on the relevant flower
+	Inputs:
+		flowers_in_conflict: list of flowers that were chosen by two or more bees
+		bee_route: updated bee_route with the new positions
+		number_of_bees: number of bees
+		stochasticity: bool, if False deactivate stochasticity in the simulation
+	Outputs: 
+		losers: individuals that have lost the competition
+	"""
 	losers=[False for bee in range (number_of_bees)]
 	destinations_chosen_by_each_bee = bee_route[:,-1].flatten()
 
@@ -162,8 +181,25 @@ def resolve_conflit(flowers_in_conflict,bee_route,number_of_bees,stochasticity):
 				losers[bee]=True
 	return(losers)
 
-def punish_and_reward_bees(number_of_resources_foraged,number_of_bees,bee_route,bees_still_foraging,losers,resources_on_flowers,bee_info,learning_array_list,array_geometry,count_transitions,array_of_vector_used):
-
+def punish_and_reward_bees(number_of_resources_foraged,number_of_bees,bee_route,is_bee_still_foraging,losers,resources_on_flowers,bee_info,learning_array_list,array_geometry,count_transitions,count_failed_transitions):
+	"""
+	Description:
+		Apply online learning for each bee still foraging
+	Inputs:
+		number_of_resources_foraged: list of resources foraged so far by each bee
+		number_of_bees: number_of_bees
+		bee_route: matrix of size number_of_bees*number_of_visits(so far) that contain the current sequence of actions for each bee
+		is_bee_still_foraging: bool list of size number_of_bees such as is_bee_still_foraging[bee] is True if bee is still foraging
+		losers: individuals that have lost the competition
+		resources_on_flowers: list of resources on flowers
+		bee_info: dataframe of parameters for each bee
+		learning_array_list: numpy array of size number_of_bees*number_of_flowers*number_of_flowers giving the learning arry of each bee
+		array_geometry: pd dataframe storing the position fo each flower (including nest)
+		count_transitions: matrix of size (numer_of_bees, number_of_flowers,number_of_flowers) counting the number of transitions
+		count_failed_transitions: matrix of size (numer_of_bees, number_of_flowers,number_of_flowers) counting transitions that led to a negative outcome
+	Outputs: 
+		learning array_list is modified in place
+	"""
 	cost_of_flying = bee_info["cost_of_flying"][0]
 	use_Q_learning = bee_info["use_Q_learning"][0]
 	alpha_pos = bee_info["alpha_pos"]
@@ -174,7 +210,7 @@ def punish_and_reward_bees(number_of_resources_foraged,number_of_bees,bee_route,
 
 	for bee in range (number_of_bees) : 
 
-		if bees_still_foraging[bee] : 
+		if is_bee_still_foraging[bee] : 
 
 			previous_flower,current_flower = bee_route[bee,-2],bee_route[bee,-1]
 
@@ -184,7 +220,7 @@ def punish_and_reward_bees(number_of_resources_foraged,number_of_bees,bee_route,
 
 				if losers[bee] : # If bee was kicked out from the flower, it is punished
 					reward = 0
-					array_of_vector_used[previous_flower,current_flower,bee]+=1
+					count_failed_transitions[bee,previous_flower,current_flower]+=1
 
 				else : 
 
@@ -195,27 +231,53 @@ def punish_and_reward_bees(number_of_resources_foraged,number_of_bees,bee_route,
 
 					else : # The flower was empty: the bee is punished
 						reward = 0
-						array_of_vector_used[previous_flower,current_flower,bee]+=1
+						count_failed_transitions[bee,previous_flower,current_flower]+=1
 
 			# Apply online learning
 			learning_functions.apply_online_learning(bee,cost_of_flying,array_geometry,use_Q_learning,learning_array_list,previous_flower,current_flower,reward,alpha_pos[bee],alpha_neg[bee],gamma[bee],learning_factor[bee],abandon_factor[bee])
 
-def check_if_bout_finished(number_of_resources_foraged,distance_travelled,number_of_bees,bee_route,bees_still_foraging,bees_going_back_to_nest,bees_in_nest,bee_info):
-
+def check_if_bout_finished(number_of_resources_foraged,distance_travelled,number_of_bees,bee_route,is_bee_still_foraging,is_bee_going_back_to_nest,is_bee_in_nest,bee_info):
+	"""
+	Description:
+		Check if the bout is finished for some bees
+	Inputs:
+		number_of_resources_foraged: list of resources foraged so far by each bee
+		distance_travelled: list of distances travelled so far by each bee
+		number_of_bees: number of bees
+		bee_route: matrix of size number_of_bees*number_of_visits(so far) that contain the current sequence of actions for each bee
+		is_bee_still_foraging: bool list of size number_of_bees such as is_bee_still_foraging[bee] is True if bee is still foraging
+		is_bee_going_back_to_nest: bool list of size number_of_bees such as is_bee_going_back_to_nest[bee] is True if bee is going back to the nest
+		is_bee_in_nest: bool list of size number_of_bees such as is_bee_in_nest[bee] is True if bee is in the nest
+	Outputs: 
+		Some lists are modified in place
+	"""
 	for bee in range(number_of_bees) : 
-		if bees_still_foraging[bee] : 
+		if is_bee_still_foraging[bee] : 
 			# Case 1: was in the nest and no possible destiation. In this case, bee_route[bee,-1] = -1 -> the bout is over and the bee is already in nest
 			if (bee_route[bee,-1] == -1):
-				bees_still_foraging[bee]=False
-				bees_in_nest[bee]=True
+				is_bee_still_foraging[bee]=False
+				is_bee_in_nest[bee]=True
 			# Case 2: the bee has reached the maximum travelled distance
 			# Case 3: the crop of the bee is full
 			# Case 4: allow_nest_return is true for this bee and it has chosen the nest
 			if (distance_travelled[bee]>bee_info["max_distance_travelled"][bee]) or (number_of_resources_foraged[bee]==bee_info["max_crop"][bee]) or (bee_info["allow_nest_return"][bee] and bee_route[bee,-1] == 0): 
-				bees_still_foraging[bee]=False
-				bees_going_back_to_nest[bee]=True
+				is_bee_still_foraging[bee]=False
+				is_bee_going_back_to_nest[bee]=True
 
 def route_qualities_of_the_bout(number_of_resources_foraged,distance_travelled,optimal_route_quality_1_ind,optimal_route_quality_2_ind,bee_route,number_of_bees) :
+	"""
+	Description:
+		Computes the route qualities at the end of each bout and updates the optimal route quality known so far
+	Inputs:
+		number_of_resources_foraged list of resources foraged so far by each bee
+		distance_travelled: list of distances travelled so far by each bee
+		optimal_route_quality_1/2_ind: current approxiamtion of the optimal route quality for 1/2 bees
+		bee_route: matrix of size number_of_bees*number_of_visits(so far) that contain the current sequence of actions for each bee
+		number_of_bees: number_of_bees
+	Outputs: 
+		route_qualities: route quality for each bee
+		optimal_route_quality_1/2_ind (updated)
+	"""
 	route_qualities = []
 
 	for bee in range(number_of_bees):
@@ -237,36 +299,40 @@ def route_qualities_of_the_bout(number_of_resources_foraged,distance_travelled,o
 
 
 def simulate_bout(bout,bee_info,learning_array_list,array_geometry,optimal_route_quality_1_ind,optimal_route_quality_2_ind,stochasticity,number_of_bees=None):
-
+	"""
+	Description:
+		Simulate a bout
+	Inputs:
+		bout: index of bout
+		bee_info: dataframe of parameters for each bee
+		learning_array_list: numpy array of size number_of_bees*number_of_flowers*number_of_flowers giving the learning arry of each bee
+		array_geometry: pd dataframe storing the position fo each flower (including nest)
+		optimal_route_quality_1/2_ind: current approxiamtion of the optimal route quality for 1/2 bees
+		stochasticity: if False, deactivate stochasticity
+		number_of_bees: number_of_bees. If none, will take the number of rows in bee_info
+	Outputs: 
+		bee_route: route of each bee (1 row = 1 bee route)
+		route_qualities: route quality for each bee
+		optimal_route_quality_1/2_ind (updated)
+		number_of_resources_foraged: number of resources foraged by each bee
+	"""
 
 	if number_of_bees == None :
 		number_of_bees = len(bee_info.index)
 
 	number_of_flowers = len(array_geometry.index)
 
-	bee_route = initialize_bee_route(number_of_bees)
-	resources_on_flowers = initialize_resources_on_flowers(number_of_flowers)
-	array_of_vector_used = initialize_array_of_vector_used(number_of_bees,number_of_flowers) # only used if leave_after_max_fail
-	count_transitions = initialize_count_transitions(number_of_bees,number_of_flowers)
-
-	bees_still_foraging = initialize_bees_still_foraging(number_of_bees)
-	bees_going_back_to_nest = initialize_bees_going_back_to_nest(number_of_bees)
-	bees_in_nest = initialize_bees_in_nest(number_of_bees)
-
-	number_of_resources_foraged = initialize_number_of_resources_foraged(number_of_bees)
-	distance_travelled = initialize_distance_travelled(number_of_bees)
-
+	bee_route,resources_on_flowers,count_failed_transitions,count_transitions,is_bee_still_foraging,is_bee_going_back_to_nest,is_bee_in_nest,number_of_resources_foraged,distance_travelled = management_of_data_functions.initialize_bout_data(number_of_bees,number_of_flowers)
 
 	number_of_visits = 0
 
-	while np.sum(bees_still_foraging)!=0 or np.sum(bees_going_back_to_nest)!=0  : # At least one bee is still foraging or has not come back to the nest
+	while np.sum(is_bee_still_foraging)!=0 or np.sum(is_bee_going_back_to_nest)!=0  : # At least one bee is still foraging or has not come back to the nest
 
-		current_positions = bee_route[:,-1]
 
-		flowers_in_conflict,bee_route = choose_next_position(distance_travelled,number_of_visits,bout,bee_info,number_of_flowers,number_of_bees,bee_route,bees_still_foraging,bees_going_back_to_nest,bees_in_nest,current_positions,learning_array_list,array_of_vector_used,array_geometry,count_transitions,stochasticity)
+		flowers_in_conflict,bee_route = choose_next_position(distance_travelled,number_of_visits,bout,bee_info,number_of_flowers,number_of_bees,bee_route,is_bee_still_foraging,is_bee_going_back_to_nest,is_bee_in_nest,learning_array_list,count_failed_transitions,array_geometry,count_transitions,stochasticity)
 		losers=resolve_conflit(flowers_in_conflict,bee_route,number_of_bees,stochasticity)
-		punish_and_reward_bees(number_of_resources_foraged,number_of_bees,bee_route,bees_still_foraging,losers,resources_on_flowers,bee_info,learning_array_list,array_geometry,count_transitions,array_of_vector_used)
-		check_if_bout_finished(number_of_resources_foraged,distance_travelled,number_of_bees,bee_route,bees_still_foraging,bees_going_back_to_nest,bees_in_nest,bee_info)
+		punish_and_reward_bees(number_of_resources_foraged,number_of_bees,bee_route,is_bee_still_foraging,losers,resources_on_flowers,bee_info,learning_array_list,array_geometry,count_transitions,count_failed_transitions)
+		check_if_bout_finished(number_of_resources_foraged,distance_travelled,number_of_bees,bee_route,is_bee_still_foraging,is_bee_going_back_to_nest,is_bee_in_nest,bee_info)
 
 		number_of_visits += 1
 

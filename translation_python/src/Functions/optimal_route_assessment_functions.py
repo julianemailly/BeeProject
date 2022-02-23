@@ -44,15 +44,13 @@ def optimal_route_assessment(array_geometry,bee_info,array_folder,silent_sim,opt
     This is an approximation of the solution of the travelling salesman problem.
   Inputs:
     array_geometry: pandas dataframe of size 4*number_of_flowers : flower ID, x, y, patch ID
-    bbee_data: numpy array of relvant data about the bees that will be updated during the simulation
     bee_info: pandas dataframe of the parameters 
-    initial_probability_matrix_list: square matrix of size (number_of_flowers+1) giving the probabilty of going from one flower to another (including the nest) at the beginning of the simulation
     array_folder: string, path of the output folder
     silent_sim: boolean, if True prevents the prints
-    optimal_route_quality: helps updtaing the current optimal route quality of the bee
+    optimal_route_quality_1/2_ind: helps updating the current optimal route quality for 1/2 bees
     number_of_bees: number of bees for which the optimal quality will be assessed
   Outputs:
-    optimal_route: float, optimal route quality for one individual in a given environement
+    best_qual_for_all_sim: float, optimal route quality for one individual in a given environement
   """
   number_of_simulations = 100 #100
   number_of_bouts = 30
@@ -122,10 +120,9 @@ def retrieve_optimal_route(array_geometry,bee_info,array_folder,silent_sim,optim
   Inputs:
     array_geometry: pandas dataframe of size 4*number_of_flowers : flower ID, x, y, patch ID
     bee_info: pandas dataframe of the parameters 
-    initial_probability_matrix_list: square matrix of size (number_of_flowers+1) giving the probabilty of going from one flower to another (including the nest) at the beginning of the simulation
     array_folder: string, path of the output folder
     silent_sim: boolean, if True prevents the prints
-    optimal_route_quality: helps updtaing the current optimal route quality of the bee
+    optimal_route_quality_1/2_ind: helps updtaing the current optimal route quality for 1/2 bees
     number_of_bees: number of bees for which the optimal quality will be assessed
   Outputs:
     optimal_route: float, optimal route quality for one individual in a given environement

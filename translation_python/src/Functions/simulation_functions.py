@@ -41,16 +41,17 @@ def simulation_loop(initial_learning_array_list,number_of_simulations,number_of_
     Loop to make the simulation
   Inputs:
     number_of_simulations, number_of_bouts, number_of_bees: number of simulations, bouts and bees
-    optimal_route_quality: current approximation of the optimal route quality for this array
-    bee_data: data about bees to be updated
+    optimal_route_quality_1/2_ind: current approximation of the optimal route quality for this array for 1/2 bees
+    bee_info: pandas dataframe with important parameters of the bees
     array_geometry: dataframe of information about the geometry of the environment
     silent_sim: if True, prevents from printing
     array_folder: path of the /Array folder
     output_folder_of_sim: path of the Output/specific_simulation folder
-    initial_Q_table_list,initial_probability_matrix_list,
+    initial_learning_array_list : numpy array of size (number_of_bees, number_of_flowers,number_of_flowers) (number_of_flowers icludes nest) giving for each bee its learning array at the beginnig of the simulation
     sensitivity_analysis: if True, performs sensitivitya analysis
+    stochasticity: if False, deactivate the stochasticity in the bout_function
   Outputs:
-    updated optimal_route_quality
+    updated optimal_route_quality_1/2_ind
   '''
 
   saved_optimal_route_quality_1_ind = optimal_route_quality_1_ind # To compare with the optimal route quality after the simulation and update the corresponding .csv file
@@ -148,6 +149,7 @@ def simulation(current_working_directory,experiment_name,array_info,number_of_ar
   """
   Description:
   Inputs:
+    current_working_directory: current working directory (of the main.py file)
     experiment_name: identification for the experiment
     array_info: dictionary of information about the array generation 
     number_of_arrays: number of environements used
@@ -158,6 +160,7 @@ def simulation(current_working_directory,experiment_name,array_info,number_of_ar
     number_of_simulations: number of simulations
     silent_sim: if True, prevents from printing
     sensitivity_analysis: if True, will compute the absolute difference between successive learning arrays for each bee
+    stochasticity: if False, deactivate the stochasticity in the bout_function
   Ouputs:
     Stored in /Output folder
   """
@@ -184,13 +187,13 @@ def simulation(current_working_directory,experiment_name,array_info,number_of_ar
 
     # Initializing -------------------------------------------------------------------------------------------------
 
-    test_name, output_folder_of_test, parameters_dict, bee_info = management_of_data_functions.initialize_data_of_current_test(list_of_names_of_parameters,parameter_values,array_info,experiment_name,number_of_parameter_sets,silent_sim,current_working_directory,number_of_bees)
+    output_folder_of_test, bee_info = management_of_data_functions.initialize_data_of_current_test(list_of_names_of_parameters,parameter_values,array_info,experiment_name,number_of_parameter_sets,silent_sim,current_working_directory,number_of_bees)
 
     # Simulation ---------------------------------------------------------------------------------------------------
 
     for array_number in range (number_of_arrays): 
 
-      array_geometry, array_info, array_folder, optimal_route_quality_1_ind, optimal_route_quality_2_ind, output_folder_of_sim,initial_learning_array_list = management_of_data_functions.initialize_data_of_current_array(array_info, array_number, reuse_generated_arrays, current_working_directory, silent_sim, number_of_bees,bee_info,parameters_dict,output_folder_of_test)
+      array_geometry, array_info, array_folder, optimal_route_quality_1_ind, optimal_route_quality_2_ind, output_folder_of_sim,initial_learning_array_list = management_of_data_functions.initialize_data_of_current_array(array_info, array_number, reuse_generated_arrays, current_working_directory, silent_sim, number_of_bees,bee_info,output_folder_of_test)
       optimal_route_quality_1_ind,optimal_route_quality_2_ind = simulation_loop(initial_learning_array_list,number_of_simulations,number_of_bouts,number_of_bees,optimal_route_quality_1_ind, optimal_route_quality_2_ind,bee_info,array_geometry,silent_sim,array_folder,output_folder_of_sim,sensitivity_analysis,stochasticity)
 
     # Video output: not developed yet  ---------------------------------------------------------------------------------------------------------

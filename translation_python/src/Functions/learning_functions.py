@@ -29,7 +29,7 @@ def softmax(values_vector,beta) :
 def apply_online_Q_learning(bee,Q_table_list,state,action,reward,alpha_pos,alpha_neg,gamma) : 
   """
   Description: 
-    A bee with Q Table (QTable), is in state (state), does action (action), gets a reward (reward)
+    A bee with Q Table, is in state (state), does action (action), gets a reward (reward)
     Apply Q Learning algorithm: QTable[state,action]=QTable[state,action]+alpha*(reward+gamma*max(Q(nextState,b)/b in actions)-Q[state,action])
     With alpha: learning rate, gamma: temporal discount factor
     Here, action also corresponds to the next state since completely deterministic environment so max(Q(nextState,b)/b in actions)=max(Q(action,b)/b in actions)
@@ -51,14 +51,15 @@ def apply_online_multiplicative_learning(bee,probability_matrix_list,state,actio
   Description: 
     Applies online learning by T. Dubois: probability_matrix[state,action] = probability_matrix[state,action]*factor where factor=learning_factor when reward>0 and factor=abandon_factor otherwise
   Inputs:
-    probability_matrx: probability of going from one flower to another
+    bee: index of bee
+    probability_matrx_list: list of probability matrices of going from one flower to another (one for each bee)
     state: previous flower
     action: current flower
-    reward: 1 if positive outcome, -1 if negative outcome
+    reward: >0 for positive RL, <=0 for negative RL
     learning_factor: >=1 will increase the probabilty of doing an action
-    abandon_factor: <=1 will decrease the porbability of doing an action
+    abandon_factor: 0<= and <=1, will decrease the porbability of doing an action
   Outputs: 
-    Updated probability matrix
+    Updated probability matrix list (in place)
   """ 
   if reward >0 : 
     factor = learning_factor
@@ -73,18 +74,22 @@ def apply_online_multiplicative_learning(bee,probability_matrix_list,state,actio
 def apply_online_learning(bee,cost_of_flying,array_geometry,use_Q_learning,learning_array_list,state,action,reward,alpha_pos,alpha_neg,gamma,learning_factor,abandon_factor) : 
   """
   Description: 
-    Arbitration between the two apply_online_(Q)learning fuctions
+    Arbitration between the two apply_online_q/muktiplicative_learning functions
   Inputs:
-    learning_array: either probability matrix or Q_table
+    bee: index of bee
+    learning_array_list: either probability matrix list or Q_table list
+    use_Q_learning: if True, will use Q-learning, else, will use T.Dubois' model
+    cost_of_flying: if True and if use Q-Learning, the distance between two flowers will be integrated as  punishment in the rewad computation
+    array_geometry: pandas dataframe giving the position of the different flowers
     state: previous flower
     action: current flower
     reward: CAREFUL The reward is specified for Q learning 
     learning_factor: >=1 will increase the probabilty of doing an action
     abandon_factor: <=1 will decrease the porbability of doing an action
     alpha_pos(neg): learnig rate for positive(negative) outcomes 
-    gamma: temportal discounting factor
+    gamma: temporal discounting factor
   Outputs: 
-    Updated learning array  
+    Updated learning array list (in place)
   """
   if reward is not None : 
 

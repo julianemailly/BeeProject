@@ -14,17 +14,46 @@ import environment_generation_functions
 
 # Management of data  --------------------------------------------------------------
 
+def initialize_bout_data(number_of_bees,number_of_flowers):
+  """
+  Decription:
+
+  Inputs:
+    number_of_bees: number of bees
+    number_of_flowers: number of flowers including nest
+  Outputs:
+    bee_route: route of each bee (1 row = 1 bee route)
+    resources_on_flowers: list of reosurces on each flower (including nest)
+    count_transitions: matrix of size (numer_of_bees, number_of_flowers,number_of_flowers) counting the number of transitions
+    count_failed_transitions: matrix of size (numer_of_bees, number_of_flowers,number_of_flowers) counting transitions that led to a negative outcome
+    is_bee_still_foraging: bool list of size number_of_bees such as is_bee_still_foraging[bee] is True if bee is still foraging
+    is_bee_going_back_to_nest: bool list of size number_of_bees such as is_bee_going_back_to_nest[bee] is True if bee is going back to the nest
+    is_bee_in_nest: bool list of size number_of_bees such as is_bee_in_nest[bee] is True if bee is in the nest
+    number_of_resources_foraged: list of resources foraged so far by each bee
+    distance_travelled: list of distances travelled so far by each bee
+  """
+  bee_route = np.full((number_of_bees,1),0)
+  resources_on_flowers = [0]+[1 for flower in range (number_of_flowers-1)]
+  count_failed_transitions = np.full((number_of_bees,number_of_flowers,number_of_flowers),0)
+  count_transitions = np.full((number_of_bees,number_of_flowers,number_of_flowers),0)
+  is_bee_still_foraging = [True for bee in range(number_of_bees)]
+  is_bee_going_back_to_nest = [False for bee in range (number_of_bees)]
+  is_bee_in_nest = [False for bee in range (number_of_bees)]
+  number_of_resources_foraged = [0 for bee in range (number_of_bees)]
+  distance_travelled = [0. for bee in range(number_of_bees)]
+  return(bee_route,resources_on_flowers,count_failed_transitions,count_transitions,is_bee_still_foraging,is_bee_going_back_to_nest,is_bee_in_nest,number_of_resources_foraged,distance_travelled)
+
 def initialize_probability_matrix_list(array_geometry,dist_factor,number_of_bees,allow_nest_return_list) : 
   """
   Description: 
     Generates the probability matrix for a given array for each bee
   Inputs:
-      array_geometry: pandas dataframe of size 4*number_of_flowers : flower ID, x, y, patch ID
-      dist_factor: float, parameter to estimate the probabilities 
-      number_of_bees: integer giving the total number_of_bees
-      allow_nest_return_list: list of allow_nest_return parameter for each bee
-    Outputs: 
-      initial_probability_matrix_list: list of probability matrices (one for each bee)
+    array_geometry: pandas dataframe of size 4*number_of_flowers : flower ID, x, y, patch ID
+    dist_factor: float, parameter to estimate the probabilities 
+    number_of_bees: integer giving the total number_of_bees
+    allow_nest_return_list: list of allow_nest_return parameter for each bee
+  Outputs: 
+    initial_probability_matrix_list: list of probability matrices (one for each bee)
   """
   distance_between_flowers = geometry_functions.get_matrix_of_distances_between_flowers(array_geometry)
   initial_probability_matrix_list = [geometry_functions.normalize_matrix_by_row (geometry_functions.give_probability_of_vector_with_dist_factor(distance_between_flowers,dist_factor)) for bee in range (number_of_bees)]
@@ -45,6 +74,7 @@ def initialize_Q_table_list (initialize_Q_table, array_geometry, dist_factor, nu
     initialize_Q_table: string, rule for initialization of Q matrix
     array_geometry: pandas dataframe of size 4*number_of_flowers : flower ID, x, y, patch ID
     dist_factor: float, parameter to estimate the probability of going from a flower to another
+    number_of_bees: integer giving the total number_of_bees
     allow_nest_return_list: list of allow_nest_return parameter for each bee
   Outputs: 
     List of Q tables
@@ -74,9 +104,8 @@ def initialize_bee_info(number_of_bees,parameters_dict) :
   Inputs:
     number_of_bees: integer, number of bees
     parameters_dict: dictionnary with parameters of the bees
-    array_ID: string with the ID of the array
   Outputs:
-    bee_info: pandas dataframe with information about bees that will be stored at the end. nrows = number_of_bees, ncol = number of attributes of parameters_dict+2
+    bee_info: pandas dataframe with information about bees that will be stored at the end. nrows = number_of_bees, ncol = number of attributes of parameters_dict+1
   """
   for key in parameters_dict : 
     if not isinstance(parameters_dict[key],list) :
@@ -90,6 +119,16 @@ def initialize_bee_info(number_of_bees,parameters_dict) :
   return(bee_info)
 
 def add_array_ID_to_bee_info(bee_info, array_ID,number_of_bees) :
+  """
+  Description:
+    Add the array_ID info to a new column in bee_info
+  Inputs:
+    array_ID: string, name of the array
+    number_of_bees: number of bees
+    bee_info: pd Dataframe storing bees paarmeters for the simulation
+  Outputs:
+    bee_info updated in place
+  """
   bee_info["array_ID"] = [array_ID for k in range (number_of_bees)]
   return()
 
@@ -170,7 +209,8 @@ def initialize_data_of_current_test(list_of_names_of_parameters,parameter_values
     current_working_directory: name of current working directory
     number_of_bees: number of bees
   Outputs:
-    Some useful variables for the test
+    output_folder_of_test: path to the output folder of the test
+    bee_info: pd dataframe storing the simulation parameters of each bee
   """
 
   # Create test name according to parameter values
@@ -186,12 +226,33 @@ def initialize_data_of_current_test(list_of_names_of_parameters,parameter_values
   # Create a dataframe of information to be retrieve in further analyses and passed to the simulation functions (and remember what parameters were used).
   bee_info = initialize_bee_info(number_of_bees,parameters_dict)
 
-  return( test_name, output_folder_of_test, parameters_dict,bee_info)
+  return(output_folder_of_test,bee_info)
 
 
 
 
-def initialize_data_of_current_array(array_info, array_number, reuse_generated_arrays, current_working_directory, silent_sim, number_of_bees,bee_info,parameters_dict,output_folder_of_test):
+def initialize_data_of_current_array(array_info, array_number, reuse_generated_arrays, current_working_directory, silent_sim, number_of_bees,bee_info,output_folder_of_test):
+  """
+  Description:
+    Initializes the data of the test for a given array
+  Inputs:
+    array_number: number of the array (if several)
+    array_info: dictionary of information about the environment
+    reuse_generated_arrays: if True will reuse previously generated arrays
+    bee_info: pd dataframe storing the simulation parameters of each bee
+    silent_sim: if True, prevents from printing
+    current_working_directory: name of current working directory
+    number_of_bees: number of bees
+    output_folder_of_test: path to the output folder of the test
+  Outputs:
+    array_geometry: pandas dataframe with 4 columns: (flower) ID, x, y, patch (ID)
+    array_info: updated array_info
+    array_folder: path to the /Arrays/name_of_this_specific_array folder
+    optimal_route_quality_1/2_ind: current approximation of the optimal route quality for 1/2 bees
+    output_folder_of_sim: path to the output folder of the simulation
+    initial_learning_array_list: either initial probability matrix for each bee or initial Q_table for each bee
+  """
+
   # Generate array
   array_geometry, array_info, array_folder = environment_generation_functions.create_environment(array_info, array_number, reuse_generated_arrays, current_working_directory, silent_sim)
 
@@ -202,7 +263,6 @@ def initialize_data_of_current_array(array_info, array_number, reuse_generated_a
     initial_learning_array_list = initialize_Q_table_list (bee_info["initialize_Q_table"][0], array_geometry, bee_info["dist_factor"][0], number_of_bees,bee_info["allow_nest_return"])
   else : 
     initial_learning_array_list = initialize_probability_matrix_list(array_geometry, bee_info["dist_factor"][0], number_of_bees,bee_info["allow_nest_return"])
-
 
   # Add array_ID to bee_info
   add_array_ID_to_bee_info(bee_info, array_info["array_ID"],number_of_bees)
